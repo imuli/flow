@@ -1,9 +1,11 @@
-var graph;
+var graph, paper;
 
 function initDraw() {
 	graph = new joint.dia.Graph;
-	var paper = new joint.dia.Paper({
+	paper = new joint.dia.Paper({
 		el: $('#paper'),
+		width: "100%",
+		height: "100%",
 		gridSize: 1,
 		model: graph,
 		defaultLink: new joint.dia.Link({
@@ -17,8 +19,8 @@ function initDraw() {
 		markAvailable: true
 	});
 	var me = new joint.shapes.devs.Model({
-		position: { x: 200, y: 200 },
-		size: { width: 400, height: 400 },
+		position: { x: 0, y: 0 },
+		size: { width: 600, height: 600 },
 		inPorts: [ 'n₁', 'n₂' ],
 		outPorts: [ 'N₁' ],
 		attrs: {
@@ -46,6 +48,7 @@ function initDraw() {
 	paper.on('all', function(){
 		console.log(arguments);
 	});
+
 }
 
 function layout() {
