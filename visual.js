@@ -17,10 +17,10 @@ function ioBox(offset, count, height, par){
 		var box = rectText(it.name, par);
 		var textbox = box.text.getBBox();
 		var h = height/count;
+		box.edge.setAttribute("class", it.type);
 		box.edge.setAttribute("height", h);
 		box.edge.setAttribute("y", n*h);
 		box.text.setAttribute("y", n*h + h/2 + textbox.height/4);
-		console.log(n*h, h/2-textbox.height/2);
 		return box;
 	}
 }
@@ -61,8 +61,9 @@ function funcView(func, par){
 }
 
 var testfunc = {
-	in: [ {name: "n₁"}, {name: "n"}, {name: "n₁₁"} ],
-	out: [ {name: "N"}, {name: "N₂"} ],
+	in: [	{ name: "n", type: "int" },
+		{ name: "n", type: "int" }, ],
+	out: [	{ name: "N", type: "int" }, ],
 	name: "+",
 }
 
