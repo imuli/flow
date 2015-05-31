@@ -60,17 +60,41 @@ function funcView(func, par){
 	}
 }
 
-var testfunc = {
-	in: [	{ name: "n", type: "int" },
-		{ name: "n", type: "int" }, ],
-	out: [	{ name: "N", type: "int" }, ],
-	name: "+",
-}
+var fns = {
+	"476131ca": { name: "+", description: "n + n = N",
+		in: [	{ name: "n", type: "int" }, { name: "n", type: "int" }, ],
+		out: [	{ name: "N", type: "int" }, ],
+	},
+	"4c12fbae": { name: "-", description: "n₁ - n₂ = N",
+		in: [	{ name: "n₁", type: "int" }, { name: "n₂", type: "int" }, ],
+		out: [	{ name: "N", type: "int" }, ],
+	},
+	"5165da0e": { name: "±", description: "n₁ ± n₂ = N₁, N₂",
+		in: [	{ name: "n₁", type: "int" }, { name: "n₂", type: "int" }, ],
+		out: [	{ name: "N₁", type: "int" }, { name: "N₂", type: "int" }, ],
+		fns: [	{ ref: "476131ca" }, { ref: "4c12fbae" } ],
+		map: [
+			{ fr:[0], to:[0,0] }, { fr:[1], to:[0,1] },
+			{ fr:[0], to:[1,0] }, { fr:[1], to:[1,1] },
+			{ fr:[0,0], to:[0] }, { fr:[0,1], to:[1] },
+		]
+	},
+	"5966100c": { name: "*", description: "n * n = N",
+		in: [	{ name: "n", type: "int" }, { name: "n", type: "int" }, ],
+		out: [	{ name: "N", type: "int" }, ],
+	},
+};
 
-var me;
+var me = {};
 var svg;
 function draw(){
 	svg = document.getElementsByTagName("svg")[0];
-	me = funcView(testfunc, svg);
-	me.me.setAttribute("transform", "translate(20,20)");
+	for(i in fns){
+		me[i] = funcView(fns[i], svg);
+	}
+	var n=0;
+	for(i in me){
+		n++
+		me[i].me.setAttribute("transform", "translate(20," + (20 + n*50) + ")");
+	}
 }
