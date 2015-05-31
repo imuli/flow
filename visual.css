@@ -16,4 +16,14 @@ div {
 
 .int {
 	fill: lime;
+	background: lime;
+}
+
+table.fn {
+	border-collapse: collapse;
+}
+.fn td, .fn th {
+	border: 1px solid black;
+	padding: 0 1ex;
+	margin: 0;
 }

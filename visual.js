@@ -1,57 +1,53 @@
 function elementSVG(tag){
 	return document.createElementNS("http://www.w3.org/2000/svg", tag);
 }
-function rectText(title, par){
-	var rect = elementSVG("rect");
-	rect.setAttribute("fill", "none");
-	rect.setAttribute("stroke", "black");
-	var text = elementSVG("text");
-	var innerText = document.createTextNode(title);
-	text.appendChild(innerText);
-	par.appendChild(rect);
-	par.appendChild(text);
-	return { edge: rect, text: text };
+function elementHTML(tag){
+	return document.createElementNS("http://www.w3.org/1999/xhtml", tag);
 }
-function ioBox(offset, count, height, par){
-	return function(it, n){
-		var box = rectText(it.name, par);
-		var textbox = box.text.getBBox();
-		var h = height/count;
-		box.edge.setAttribute("class", it.type);
-		box.edge.setAttribute("height", h);
-		box.edge.setAttribute("y", n*h);
-		box.text.setAttribute("y", n*h + h/2 + textbox.height/4);
-		return box;
-	}
+function ioBox(io, rows){
+	var td = elementHTML("td");
+	var text = document.createTextNode(io.name);
+	td.appendChild(text);
+	td.setAttribute("class", io.type);
+	td.setAttribute("rowspan", rows);
+	return td;
 }
-function setBoxWidth(box, width, offset){
-	box.edge.setAttribute("width", width + 20);
-	box.text.setAttribute("x", offset + (width + 20 - box.text.getBBox().width)/2);
-	box.edge.setAttribute("x", offset);
+function gcf(a, b){
+	if(b == 0) return a;
+	a = a % b;
+	return gcf(b, a);
 }
-function normalizeBoxes(b, offset){
-	var max = 0;
-	for(n in b){ max = Math.max(max, b[n].text.getBBox().width) }
-	for(n in b){
-		setBoxWidth(b[n], max, offset);
-	}
+function lcm(a, b){
+	return a*b/gcf(a,b);
 }
 function funcView(func, par){
-	var g = elementSVG("g");
+	var g = elementSVG("foreignObject");
+	var table = elementHTML("table");
+	table.setAttribute("class", "fn");
+	g.appendChild(table);
 	par.appendChild(g);
-	var body = rectText("", g);
-	var height = 20 * Math.max(func.in.length, func.out.length);
-	var inputs = func.in.map(ioBox(0, func.in.length, height, g));
-	normalizeBoxes(inputs, 0);
-
-	var offset = inputs[0].edge.width.baseVal.value;
-	var body = ioBox(offset, 1, height, g)(func, 0);
-	setBoxWidth(body, body.text.getBBox().width, offset);
-
-	offset += body.edge.width.baseVal.value;
-	var outputs = func.out.map(ioBox(offset, func.out.length, height, g));
-	normalizeBoxes(outputs, offset);
-
+	var rows = lcm(func.in.length, func.out.length);
+	var inputs=outputs=[], body;
+	var ispan = rows/func.in.length;
+	var ospan = rows/func.out.length;
+	for(var i = 0; i < rows; i++){
+		var row = elementHTML("tr");
+		if(i % ispan == 0){
+			inputs[i] = ioBox(func.in[i/ispan], ispan);
+			row.appendChild(inputs[i]);
+		}
+		if(i < 1){
+			body = ioBox(func, rows);
+			row.appendChild(body);
+		}
+		if(i % ospan == 0){
+			outputs[i] = ioBox(func.out[i/ospan], ospan);
+			row.appendChild(outputs[i]);
+		}
+		table.appendChild(row);
+	}
+	g.setAttribute("width", table.offsetWidth);
+	g.setAttribute("height", table.offsetHeight);
 	return {
 		me: g,
 		body: body,
@@ -79,9 +75,16 @@ var fns = {
 			{ fr:[0,0], to:[0] }, { fr:[0,1], to:[1] },
 		]
 	},
-	"5966100c": { name: "*", description: "n * n = N",
-		in: [	{ name: "n", type: "int" }, { name: "n", type: "int" }, ],
-		out: [	{ name: "N", type: "int" }, ],
+	"5966100c": { name: "foolish", description: "",
+		in: [
+			{ name: "n", type: "int" },
+			{ name: "n", type: "int" },
+		],
+		out: [
+			{ name: "N", type: "int" },
+			{ name: "N", type: "int" },
+			{ name: "N", type: "int" },
+		],
 	},
 };
 
@@ -95,6 +98,7 @@ function draw(){
 	var n=0;
 	for(i in me){
 		n++
-		me[i].me.setAttribute("transform", "translate(20," + (20 + n*50) + ")");
+		me[i].me.setAttribute("x", 20);
+		me[i].me.setAttribute("y", 20 + n*50);
 	}
 }
