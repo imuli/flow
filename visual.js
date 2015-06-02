@@ -17,13 +17,35 @@ var flow = (function(){
 		return document.createElementNS("http://www.w3.org/1999/xhtml", tag);
 	}
 
+	/* user interaction */
+	function move(e){
+		var node = this.parentNode;
+		var xoffset = e.clientX - node.x.baseVal.value;
+		var yoffset = e.clientY - node.y.baseVal.value;
+		var movement = function(e){
+			node.x.baseVal.value = e.clientX - xoffset;
+			node.y.baseVal.value = e.clientY - yoffset;
+			console.log("move", e.clientX - xoffset, e.clientY - yoffset);
+		}
+		window.addEventListener("mousemove", movement);
+		window.addEventListener("mouseup", function cleanup (e){
+			console.log("up", e);
+			window.removeEventListener("mousemove", movement);
+			window.removeEventListener("mouseup", cleanup);
+		});
+		console.log("down", xoffset, yoffset);
+		return false;
+	}
+
 	/* make elements */
 	function cell(node, rows){
 		var td = elementHTML("td");
 		var text = document.createTextNode(node.name);
 		td.appendChild(text);
-		td.setAttribute("class", node.type);
 		td.setAttribute("rowspan", rows);
+		if(node.type !== undefined){
+			td.setAttribute("class", node.type);
+		}
 		if(node.description !== undefined){
 			td.setAttribute("title", node.description);
 		}
@@ -46,6 +68,7 @@ var flow = (function(){
 				table.appendChild(row([func.in, [func], func.out], i, cols));
 			}
 			table.setAttribute("class", "fn");
+			table.addEventListener("mousedown", move);
 			return table;
 	}
 	return {
