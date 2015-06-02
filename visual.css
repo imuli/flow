@@ -15,14 +15,20 @@ div {
 }
 
 .int {
-	fill: lime;
 	background: lime;
+}
+
+.bool {
+	background: radial-gradient(ellipse, white, white, black);
 }
 
 table.fn {
 	border-collapse: collapse;
 	text-align: center;
 	white-space: pre;
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select: none;
 }
 .fn td {
 	border: 1px solid black;

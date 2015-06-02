@@ -24,6 +24,9 @@ var flow = (function(){
 		td.appendChild(text);
 		td.setAttribute("class", node.type);
 		td.setAttribute("rowspan", rows);
+		if(node.description !== undefined){
+			td.setAttribute("title", node.description);
+		}
 		return td;
 	}
 	function row(cols, n, total){
@@ -61,15 +64,23 @@ var flow = (function(){
 })();
 
 var fns = {
-	"476131ca": { name: "+", description: "n + n = N",
+	"476131ca": { name: "+", description: "N = n + n",
 		in: [	{ name: "n", type: "int" }, { name: "n", type: "int" }, ],
 		out: [	{ name: "N", type: "int" }, ],
 	},
-	"4c12fbae": { name: "-", description: "n₁ - n₂ = N",
+	"4c12fbae": { name: "-", description: "N = n₁ - n₂",
 		in: [	{ name: "n₁", type: "int" }, { name: "n₂", type: "int" }, ],
 		out: [	{ name: "N", type: "int" }, ],
 	},
-	"5165da0e": { name: "±", description: "n₁ ± n₂ = N₁, N₂",
+	"2c4916e2": { name: "-", description: "N = -n",
+		in: [	{ name: "n", type: "int" }, ],
+		out: [	{ name: "N", type: "int" }, ],
+	},
+	"941145c4": { name: ">", description: "B = n₁ > n₂",
+		in: [	{ name: "n₁", type: "int" }, { name: "n₂", type: "int" }, ],
+		out: [	{ name: "B", type: "bool" }, ],
+	},
+	"5165da0e": { name: "±", description: "N₁, N₂ = n₁ ± n₂",
 		in: [	{ name: "n₁", type: "int" }, { name: "n₂", type: "int" }, ],
 		out: [	{ name: "N₁", type: "int" }, { name: "N₂", type: "int" }, ],
 		fns: [	{ ref: "476131ca" }, { ref: "4c12fbae" } ],
