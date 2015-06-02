@@ -1,60 +1,64 @@
-function elementSVG(tag){
-	return document.createElementNS("http://www.w3.org/2000/svg", tag);
-}
-function elementHTML(tag){
-	return document.createElementNS("http://www.w3.org/1999/xhtml", tag);
-}
-function ioBox(io, rows){
-	var td = elementHTML("td");
-	var text = document.createTextNode(io.name);
-	td.appendChild(text);
-	td.setAttribute("class", io.type);
-	td.setAttribute("rowspan", rows);
-	return td;
-}
-function gcf(a, b){
-	if(b == 0) return a;
-	a = a % b;
-	return gcf(b, a);
-}
-function lcm(a, b){
-	return a*b/gcf(a,b);
-}
-function funcView(func, par){
-	var g = elementSVG("foreignObject");
-	var table = elementHTML("table");
-	table.setAttribute("class", "fn");
-	g.appendChild(table);
-	par.appendChild(g);
-	var rows = lcm(func.in.length, func.out.length);
-	var inputs=outputs=[], body;
-	var ispan = rows/func.in.length;
-	var ospan = rows/func.out.length;
-	for(var i = 0; i < rows; i++){
+var flow = (function(){
+	/* to calculate cells spans properly */
+	function gcf(a, b){
+		if(b == 0) return a;
+		a = a % b;
+		return gcf(b, a);
+	}
+	function lcm(a, b){
+		return a*b/gcf(a,b);
+	}
+
+	/* convenience */
+	function elementSVG(tag){
+		return document.createElementNS("http://www.w3.org/2000/svg", tag);
+	}
+	function elementHTML(tag){
+		return document.createElementNS("http://www.w3.org/1999/xhtml", tag);
+	}
+
+	/* make elements */
+	function cell(node, rows){
+		var td = elementHTML("td");
+		var text = document.createTextNode(node.name);
+		td.appendChild(text);
+		td.setAttribute("class", node.type);
+		td.setAttribute("rowspan", rows);
+		return td;
+	}
+	function row(cols, n, total){
 		var row = elementHTML("tr");
-		if(i % ispan == 0){
-			inputs[i] = ioBox(func.in[i/ispan], ispan);
-			row.appendChild(inputs[i]);
+		for(var i = 0; i < cols.length; i++){
+			var span = total/cols[i].length;
+			if(n % span == 0){
+				row.appendChild(cell(cols[i][n/span], span));
+			}
 		}
-		if(i < 1){
-			body = ioBox(func, rows);
-			row.appendChild(body);
-		}
-		if(i % ospan == 0){
-			outputs[i] = ioBox(func.out[i/ospan], ospan);
-			row.appendChild(outputs[i]);
-		}
-		table.appendChild(row);
+		return row;
 	}
-	g.setAttribute("width", table.offsetWidth);
-	g.setAttribute("height", table.offsetHeight);
+	function inner(func){
+			var table = elementHTML("table");
+			var cols = lcm(func.in.length, func.out.length);
+			for(var i = 0; i < cols; i++){
+				table.appendChild(row([func.in, [func], func.out], i, cols));
+			}
+			table.setAttribute("class", "fn");
+			return table;
+	}
 	return {
-		me: g,
-		body: body,
-		in: inputs,
-		out: outputs,
+		View : function(func, par){
+			var g = elementSVG("foreignObject");
+			var table = inner(func);
+			g.appendChild(table);
+			par.appendChild(g);
+			g.setAttribute("width", table.offsetWidth);
+			g.setAttribute("height", table.offsetHeight);
+			return {
+				me: g,
+			}
+		}
 	}
-}
+})();
 
 var fns = {
 	"476131ca": { name: "+", description: "n + n = N",
@@ -83,7 +87,7 @@ var fns = {
 		out: [
 			{ name: "N", type: "int" },
 			{ name: "N", type: "int" },
-			{ name: "N", type: "int" },
+			{ name: "--N--", type: "int" },
 		],
 	},
 };
@@ -93,12 +97,12 @@ var svg;
 function draw(){
 	svg = document.getElementsByTagName("svg")[0];
 	for(i in fns){
-		me[i] = funcView(fns[i], svg);
+		me[i] = flow.View(fns[i], svg);
 	}
 	var n=0;
 	for(i in me){
-		n++
 		me[i].me.setAttribute("x", 20);
 		me[i].me.setAttribute("y", 20 + n*50);
+		n++
 	}
 }

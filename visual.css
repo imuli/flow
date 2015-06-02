@@ -21,8 +21,10 @@ div {
 
 table.fn {
 	border-collapse: collapse;
+	text-align: center;
+	white-space: pre;
 }
-.fn td, .fn th {
+.fn td {
 	border: 1px solid black;
 	padding: 0 1ex;
 	margin: 0;
