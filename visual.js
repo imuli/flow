@@ -25,24 +25,22 @@ var flow = (function(){
 		var movement = function(e){
 			node.x.baseVal.value = e.clientX - xoffset;
 			node.y.baseVal.value = e.clientY - yoffset;
-			console.log("move", e.clientX - xoffset, e.clientY - yoffset);
 		}
 		window.addEventListener("mousemove", movement);
 		window.addEventListener("mouseup", function cleanup (e){
-			console.log("up", e);
 			window.removeEventListener("mousemove", movement);
 			window.removeEventListener("mouseup", cleanup);
 		});
-		console.log("down", xoffset, yoffset);
 		return false;
 	}
 
 	/* make elements */
-	function cell(node, rows){
+	function cell(node, id, rows){
 		var td = elementHTML("td");
 		var text = document.createTextNode(node.name);
 		td.appendChild(text);
 		td.setAttribute("rowspan", rows);
+		td.setAttribute("id", id);
 		if(node.type !== undefined){
 			td.setAttribute("class", node.type);
 		}
@@ -51,30 +49,33 @@ var flow = (function(){
 		}
 		return td;
 	}
-	function row(cols, n, total){
+	function row(cols, id, n, total){
 		var row = elementHTML("tr");
-		for(var i = 0; i < cols.length; i++){
+		for(i in cols){
 			var span = total/cols[i].length;
 			if(n % span == 0){
-				row.appendChild(cell(cols[i][n/span], span));
+				row.appendChild(cell(cols[i][n/span],
+							id + ':' + i + n/span, span));
 			}
 		}
 		return row;
 	}
-	function inner(func){
+	function inner(func, id){
 			var table = elementHTML("table");
-			var cols = lcm(func.in.length, func.out.length);
-			for(var i = 0; i < cols; i++){
-				table.appendChild(row([func.in, [func], func.out], i, cols));
+			var rowCount = lcm(func.in.length, func.out.length);
+			var cols = {i: func.in, b: [func], o: func.out};
+			for(var i = 0; i < rowCount; i++){
+				table.appendChild(row(cols, id, i, rowCount));
 			}
+			table.setAttribute("id", id);
 			table.setAttribute("class", "fn");
 			table.addEventListener("mousedown", move);
 			return table;
 	}
 	return {
-		View : function(func, par){
+		View : function(func, id, par){
 			var g = elementSVG("foreignObject");
-			var table = inner(func);
+			var table = inner(func, id);
 			g.appendChild(table);
 			par.appendChild(g);
 			g.setAttribute("width", table.offsetWidth);
@@ -82,7 +83,7 @@ var flow = (function(){
 			return {
 				me: g,
 			}
-		}
+		},
 	}
 })();
 
@@ -131,7 +132,7 @@ var svg;
 function draw(){
 	svg = document.getElementsByTagName("svg")[0];
 	for(i in fns){
-		me[i] = flow.View(fns[i], svg);
+		me[i] = flow.View(fns[i], i, svg);
 	}
 	var n=0;
 	for(i in me){
