@@ -176,3 +176,100 @@ function draw(){
 	svg = document.getElementsByTagName("svg")[0];
 	example = flow.BigView(fns["5165da0e"], fns, "5165da0e", svg);
 }
+
+function getMinBoxes(node){
+	var zero = { width: 0, height: 0, };
+	if(node.tagName === "rect"){
+		return zero;
+	} else if(node.tagName == "text"){
+		var base = node.getBBox();
+		var fontsize = window.getComputedStyle(node, null).getPropertyValue("font-size").slice(0, -2);
+		return {
+			width: base.width + fontsize/2,
+			height: base.height + fontsize/4,
+		};
+	} else if(node.tagName == "g"){
+		var ret = {};
+		if(node.id !== undefined){
+			ret.id = node.id;
+		}
+
+		ret.children = [];
+		for(var i=0; i<node.children.length; i++){
+			ret.children[i] = getMinBoxes(node.children[i]);
+		}
+
+		var maxBox = ret.children.reduce(function(a, b){
+			return {
+				width: a.width > b.width ? a.width : b.width,
+				height: a.height > b.height ? a.height : b.height,
+			}
+		}, zero);
+
+		var sumBox = ret.children.reduce(function(a, b){
+			return {
+				width: a.width + b.width,
+				height: a.height + b.height,
+			}
+		}, zero);
+
+		if(node.dataset.bind === "tight" && node.dataset.dir === "h"){
+			ret.width = sumBox.width;
+			ret.height = maxBox.height;
+		} else if(node.dataset.bind === "tight" && node.dataset.dir === "v"){
+			ret.width = maxBox.width;
+			ret.height = sumBox.height;
+		} else {
+			ret.width = maxBox.width;
+			ret.height = maxBox.height;
+		}
+		return ret;
+	}
+	return zero;
+}
+
+function setBoxes(node, spec){
+	if(node.tagName === "rect"){
+		node.setAttribute("width", spec.width);
+		node.setAttribute("height", spec.height);
+	} else if(node.tagName === "text"){
+		node.setAttribute("x", spec.width/2 - node.getBBox().width/2);
+		node.setAttribute("y", spec.height/2 + node.getBBox().height/4);
+	} else if(node.tagName === "g"){
+		if(spec.x !== undefined && spec.y !== undefined){
+			node.setAttribute("transform", "translate("+spec.x+","+spec.y+")");
+		}
+
+		var heightD = spec.heightO === undefined ? 0 :
+			(spec.height - spec.heightO)/spec.children.length;
+		var widthD = spec.widthO === undefined ? 0 :
+			(spec.width - spec.widthO)/spec.children.length;
+
+		var width = 0;
+		var height = 0;
+		for(var i=0; i<node.children.length; i++){
+			spec.children[i].widthO = spec.children[i].width;
+			spec.children[i].heightO = spec.children[i].height;
+			spec.children[i].x = width;
+			spec.children[i].y = height;
+			if(node.dataset.bind === "tight" && node.dataset.dir === "h"){
+				spec.children[i].width += widthD;
+				width += spec.children[i].width;
+				spec.children[i].height = spec.height;
+			} else if(node.dataset.bind === "tight" && node.dataset.dir === "v"){
+				spec.children[i].height += heightD;
+				height += spec.children[i].height;
+				spec.children[i].width = spec.width;
+			} else {
+				spec.children[i].width = spec.width;
+				spec.children[i].height = spec.height;
+			}
+			setBoxes(node.children[i], spec.children[i]);
+		}
+	}
+}
+
+function normalize(node){
+	svg = document.getElementsByTagName("svg")[0];
+	setBoxes(node, getMinBoxes(node));
+}

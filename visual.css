@@ -18,6 +18,17 @@ div {
 	background: lime;
 }
 
+.int rect {
+	fill: lime;
+}
+.body rect {
+	fill: none;
+}
+.fn rect {
+	stroke: black;
+	stroke-width: 1;
+}
+
 .bool {
 	background: radial-gradient(ellipse, white, white, black);
 }
