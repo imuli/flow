@@ -30,8 +30,16 @@ table.fn {
 	-webkit-user-select: none;
 	-ms-user-select: none;
 }
-.fn td {
+.fn td, .fn th {
 	border: 1px solid black;
 	padding: 0 1ex;
 	margin: 0;
+}
+
+table.bigfn th {
+	padding: 40ex 60ex;
+}
+
+path {
+	stroke: black;
 }

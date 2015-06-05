@@ -36,7 +36,7 @@ var flow = (function(){
 
 	/* make elements */
 	function cell(node, id, rows){
-		var td = elementHTML("td");
+		var td = elementHTML(node.type === undefined ? "th" : "td");
 		var text = document.createTextNode(node.name);
 		td.appendChild(text);
 		td.setAttribute("rowspan", rows);
@@ -72,6 +72,25 @@ var flow = (function(){
 			table.addEventListener("mousedown", move);
 			return table;
 	}
+
+	function sumMeasure(node, measure){
+		if(node.tagName == 'svg') return 0;
+		return node[measure] + sumMeasure(node.parentNode, measure);
+	}
+	function link(spec){
+		fr = document.getElementById(this + "." + spec.fr);
+		to = document.getElementById(this + "." + spec.to);
+		var link = elementSVG("path");
+		var frbase = fr.parentNode.parentNode.parentNode;
+		var tobase = to.parentNode.parentNode.parentNode;
+		var frx = frbase.offsetLeft + fr.offsetLeft + fr.offsetWidth;
+		var fry = frbase.offsetTop + fr.offsetTop + fr.offsetHeight/2;
+		var tox = tobase.offsetLeft + to.offsetLeft;
+		var toy = tobase.offsetTop + to.offsetTop + to.offsetHeight/2;
+		link.setAttribute("d", "M" + frx + " " + fry + "L" + tox + " " + toy);
+		return link;
+	}
+
 	return {
 		View : function(func, id, par){
 			var g = elementSVG("foreignObject");
@@ -82,6 +101,27 @@ var flow = (function(){
 			g.setAttribute("height", table.offsetHeight);
 			return {
 				me: g,
+			}
+		},
+		BigView : function(func, fns, id, par){
+			var g = elementSVG("foreignObject");
+			var table = inner(func, id);
+			g.appendChild(table);
+			par.appendChild(g);
+			table.classList.add("bigfn");
+			g.setAttribute("width", table.offsetWidth);
+			g.setAttribute("height", table.offsetHeight);
+			var fns = func.fns.map(function(x, i){
+				var s = flow.View(fns[x.ref], id + '.' + i, par);
+				s.me.setAttribute("x", 80);
+				s.me.setAttribute("y", 80 + 80*i);
+				return s;
+			});
+			var map = func.map.map(link, id);
+			map.map(function(x){par.appendChild(x)});
+			return {
+				me: g,
+				fns: fns,
 			}
 		},
 	}
@@ -130,17 +170,9 @@ var fns = {
 	},
 };
 
-var me = {};
+var me;
 var svg;
 function draw(){
 	svg = document.getElementsByTagName("svg")[0];
-	for(i in fns){
-		me[i] = flow.View(fns[i], i, svg);
-	}
-	var n=0;
-	for(i in me){
-		me[i].me.setAttribute("x", 20);
-		me[i].me.setAttribute("y", 20 + n*50);
-		n++
-	}
+	example = flow.BigView(fns["5165da0e"], fns, "5165da0e", svg);
 }
