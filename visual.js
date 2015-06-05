@@ -55,7 +55,7 @@ var flow = (function(){
 			var span = total/cols[i].length;
 			if(n % span == 0){
 				row.appendChild(cell(cols[i][n/span],
-							id + ':' + i + n/span, span));
+							id + '.' + i + "." + n/span, span));
 			}
 		}
 		return row;
@@ -63,7 +63,7 @@ var flow = (function(){
 	function inner(func, id){
 			var table = elementHTML("table");
 			var rowCount = lcm(func.in.length, func.out.length);
-			var cols = {i: func.in, b: [func], o: func.out};
+			var cols = {in: func.in, body: [func], out: func.out};
 			for(var i = 0; i < rowCount; i++){
 				table.appendChild(row(cols, id, i, rowCount));
 			}
@@ -109,9 +109,12 @@ var fns = {
 		out: [	{ name: "N₁", type: "int" }, { name: "N₂", type: "int" }, ],
 		fns: [	{ ref: "476131ca" }, { ref: "4c12fbae" } ],
 		map: [
-			{ fr:[0], to:[0,0] }, { fr:[1], to:[0,1] },
-			{ fr:[0], to:[1,0] }, { fr:[1], to:[1,1] },
-			{ fr:[0,0], to:[0] }, { fr:[0,1], to:[1] },
+			{ fr:"in.0", to:"0.in.0" },
+			{ fr:"in.1", to:"0.in.1" },
+			{ fr:"in.0", to:"1.in.0" },
+			{ fr:"in.1", to:"1.in.1" },
+			{ fr:"0.out.0", to:"out.0" },
+			{ fr:"1.out.0", to:"out.1" },
 		]
 	},
 	"5966100c": { name: "foolish", description: "",
