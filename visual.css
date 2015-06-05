@@ -18,11 +18,11 @@ div {
 	background: lime;
 }
 
-.int rect {
-	fill: lime;
-}
-.body rect {
+.body > rect {
 	fill: none;
+}
+.int > rect {
+	fill: lime;
 }
 .fn rect {
 	stroke: black;
@@ -30,25 +30,7 @@ div {
 }
 
 .bool {
-	background: radial-gradient(ellipse, white, white, black);
-}
-
-table.fn {
-	border-collapse: collapse;
-	text-align: center;
-	white-space: pre;
-	-moz-user-select: none;
-	-webkit-user-select: none;
-	-ms-user-select: none;
-}
-.fn td, .fn th {
-	border: 1px solid black;
-	padding: 0 1ex;
-	margin: 0;
-}
-
-table.bigfn th {
-	padding: 40ex 60ex;
+	fill: radial-gradient(ellipse, white, white, black);
 }
 
 path {

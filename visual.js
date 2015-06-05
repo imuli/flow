@@ -53,9 +53,31 @@ var flow = (function(){
 		return me;
 	}
 
+	function link(def, n, id){
+		var link = elementSVG("path");
+		link.id = id + ".link." + n;
+		link.setAttribute("data-fr", id + "." + def.fr);
+		link.setAttribute("data-to", id + "." + def.to);
+		return link;
+	}
+
+	function viewBig(funcs, id){
+		var me = view(funcs[id], id);
+		funcs[id].fns.map(function(fn, n){
+			me.children[1].appendChild(view(funcs[fn.ref], id + "." + n));
+		});
+		funcs[id].map.map(function(l, n){
+			me.children[1].appendChild(link(l, n, id));
+		});
+		return me;
+	}
+
 	return {
 		View : function(func, id){
 			return view(func, id);
+		},
+		ViewBig : function(funcs, id){
+			return viewBig(funcs, id);
 		},
 	}
 })();
@@ -65,7 +87,7 @@ var fns = {
 		in: [	{ name: "n", type: "int" }, { name: "n", type: "int" }, ],
 		out: [	{ name: "N", type: "int" }, ],
 	},
-	"4c12fbae": { name: "-", description: "N = n₁ - n₂",
+	"4c12fbae": { name: "−", description: "N = n₁ − n₂",
 		in: [	{ name: "n₁", type: "int" }, { name: "n₂", type: "int" }, ],
 		out: [	{ name: "N", type: "int" }, ],
 	},
@@ -107,7 +129,7 @@ var me;
 var svg;
 function draw(){
 	svg = document.getElementsByTagName("svg")[0];
-	example = flow.View(fns["5165da0e"], "5165da0e");
+	example = flow.ViewBig(fns, "5165da0e");
 	svg.appendChild(example);
 	normalize(example);
 	example.setAttribute("transform", "translate(20, 20)");
@@ -115,7 +137,7 @@ function draw(){
 
 function getMinBoxes(node){
 	var zero = { width: 0, height: 0, };
-	if(node.tagName === "rect"){
+	if(node.tagName === "rect" || node.tagName === "title" || node.tagName === "path"){
 		return zero;
 	} else if(node.tagName == "text"){
 		var base = node.getBBox();
@@ -156,8 +178,8 @@ function getMinBoxes(node){
 			ret.width = maxBox.width;
 			ret.height = sumBox.height;
 		} else {
-			ret.width = maxBox.width;
-			ret.height = maxBox.height;
+			ret.width = sumBox.width;
+			ret.height = sumBox.height;
 		}
 		return ret;
 	}
@@ -197,15 +219,35 @@ function setBoxes(node, spec){
 				height += spec.children[i].height;
 				spec.children[i].width = spec.width;
 			} else {
-				spec.children[i].width = spec.width;
-				spec.children[i].height = spec.height;
+				if(node.children[i].tagName === "g") {
+					spec.children[i].x = spec.width/2 - spec.children[i].width/2;
+					height += spec.children[i].height;
+				} else {
+					spec.children[i].width = spec.width;
+					spec.children[i].height = spec.height;
+				}
 			}
 			setBoxes(node.children[i], spec.children[i]);
 		}
 	}
 }
 
+function redrawLinks(node){
+	var links = node.getElementsByTagName("path");
+	for(var i=0; i < links.length; i++){
+		link = links[i];
+		var fr = document.getElementById(link.dataset.fr).getBoundingClientRect();
+		var to = document.getElementById(link.dataset.to).getBoundingClientRect();
+		var my = link.parentNode.getBoundingClientRect();
+		link.setAttribute("d", "M " + (fr.left - my.left + fr.width) +
+				" " + (fr.top - my.top + fr.height/2) +
+				" L " + (to.left - my.left) +
+				" " + (to.top - my.top + to.height/2));
+	};
+}
+
 function normalize(node){
 	svg = document.getElementsByTagName("svg")[0];
 	setBoxes(node, getMinBoxes(node));
+	redrawLinks(node);
 }
