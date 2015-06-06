@@ -6,15 +6,19 @@ var flow = (function(){
 	function box(id, dir){
 		var box = elementSVG("g");
 		box.id = id;
-		box.setAttribute("data-bind", "tight");
-		box.setAttribute("data-dir", dir);
+		box.setAttribute("data-layout", dir + "box");
+		return box;
+	}
+	function springbox(id){
+		var box = elementSVG("g");
+		box.id = id;
+		box.setAttribute("data-layout", "spring");
 		return box;
 	}
 
 	/* make elements */
 	function ioCell(io, id){
-		var g = elementSVG("g");
-		g.id = id;
+		var g = springbox(id);
 		if(io.type !== undefined){
 			g.classList.add(io.type);
 		}
@@ -25,6 +29,7 @@ var flow = (function(){
 			title.appendChild(titletext);
 		}
 		var rect = elementSVG("rect");
+		rect.setAttribute("data-layout", "fill");
 		g.appendChild(rect);
 		var text = elementSVG("text");
 		g.appendChild(text);
@@ -173,10 +178,10 @@ function getMinBoxes(node){
 			}
 		}, zero);
 
-		if(node.dataset.bind === "tight" && node.dataset.dir === "h"){
+		if(node.dataset.layout === "hbox"){
 			ret.w = ret.width = sumBox.width;
 			ret.h = ret.height = maxBox.height;
-		} else if(node.dataset.bind === "tight" && node.dataset.dir === "v"){
+		} else if(node.dataset.layout === "vbox"){
 			ret.w = ret.width = maxBox.width;
 			ret.h = ret.height = sumBox.height;
 		} else {
@@ -189,7 +194,7 @@ function getMinBoxes(node){
 }
 
 function setBoxes(node, spec){
-	if(node.tagName === "rect"){
+	if(node.dataset.layout === "fill"){
 		node.setAttribute("width", spec.width);
 		node.setAttribute("height", spec.height);
 	} else if(node.tagName === "text"){
@@ -208,22 +213,20 @@ function setBoxes(node, spec){
 		for(var i=0; i<node.children.length; i++){
 			spec.children[i].x = width;
 			spec.children[i].y = height;
-			if(node.dataset.bind === "tight" && node.dataset.dir === "h"){
+			if(node.dataset.layout === "hbox"){
 				spec.children[i].width += widthD;
 				width += spec.children[i].width;
 				spec.children[i].height = spec.height;
-			} else if(node.dataset.bind === "tight" && node.dataset.dir === "v"){
+			} else if(node.dataset.layout === "vbox"){
 				spec.children[i].height += heightD;
 				height += spec.children[i].height;
 				spec.children[i].width = spec.width;
+			} else if(node.children[i].tagName === "g"){
+				spec.children[i].x = spec.width/2 - spec.children[i].width/2;
+				height += spec.children[i].height;
 			} else {
-				if(node.children[i].tagName === "g") {
-					spec.children[i].x = spec.width/2 - spec.children[i].width/2;
-					height += spec.children[i].height;
-				} else {
-					spec.children[i].width = spec.width;
-					spec.children[i].height = spec.height;
-				}
+				spec.children[i].width = spec.width;
+				spec.children[i].height = spec.height;
 			}
 			setBoxes(node.children[i], spec.children[i]);
 		}
