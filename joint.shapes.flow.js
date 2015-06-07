@@ -20,17 +20,17 @@ if (typeof exports === 'object') {
     var _ = require('lodash');
 }
 
-joint.shapes.devs = {};
+joint.shapes.flow = {};
 
-joint.shapes.devs.Model = joint.shapes.basic.Generic.extend(_.extend({}, joint.shapes.basic.PortsModelInterface, {
+joint.shapes.flow.Model = joint.shapes.basic.Generic.extend(_.extend({}, joint.shapes.basic.PortsModelInterface, {
 
     markup: '<g class="rotatable"><g class="scalable"><rect class="body"/></g><text class="label"/><g class="inPorts"/><g class="outPorts"/></g>',
     portMarkup: '<g class="port port<%= id %>"><circle class="port-body"/><text class="port-label"/></g>',
 
     defaults: joint.util.deepSupplement({
 
-        type: 'devs.Model',
-        size: { width: 1, height: 1 },
+        type: 'flow.Model',
+        size: { width: 100, height: 80 },
         
         inPorts: [],
         outPorts: [],
@@ -49,14 +49,14 @@ joint.shapes.devs.Model = joint.shapes.basic.Generic.extend(_.extend({}, joint.s
             text: {
                 'pointer-events': 'none'
             },
-            '.label': { text: 'Model', 'ref-x': .5, 'ref-y': 10, ref: '.body', 'text-anchor': 'middle', fill: '#000000' },
+            '.label': { text: '', 'ref-x': .5, 'ref-y': 0.4, ref: '.body', 'text-anchor': 'middle', fill: '#000000' },
             '.inPorts .port-label': { x:-15, dy: 4, 'text-anchor': 'end', fill: '#000000' },
             '.outPorts .port-label':{ x: 15, dy: 4, fill: '#000000' }
         }
 
     }, joint.shapes.basic.Generic.prototype.defaults),
 
-    getPortAttrs: function(portName, index, total, selector, type) {
+    getPortAttrs: function(port, index, total, selector, type) {
 
         var attrs = {};
 
@@ -65,8 +65,8 @@ joint.shapes.devs.Model = joint.shapes.basic.Generic.extend(_.extend({}, joint.s
         var portLabelSelector = portSelector + '>.port-label';
         var portBodySelector = portSelector + '>.port-body';
 
-        attrs[portLabelSelector] = { text: portName };
-        attrs[portBodySelector] = { port: { id: portName || _.uniqueId(type) , type: type } };
+        attrs[portLabelSelector] = { text: port.name };
+        attrs[portBodySelector] = { port: { id: port.id || _.uniqueId(type) , type: type } };
         attrs[portSelector] = { ref: '.body', 'ref-y': (index + 0.5) * (1 / total) };
 
         if (selector === '.outPorts') { attrs[portSelector]['ref-dx'] = 0; }
@@ -76,11 +76,11 @@ joint.shapes.devs.Model = joint.shapes.basic.Generic.extend(_.extend({}, joint.s
 }));
 
 
-joint.shapes.devs.Atomic = joint.shapes.devs.Model.extend({
+joint.shapes.flow.Atomic = joint.shapes.flow.Model.extend({
 
     defaults: joint.util.deepSupplement({
 
-        type: 'devs.Atomic',
+        type: 'flow.Atomic',
         size: { width: 80, height: 80 },
         attrs: {
             '.body': { fill: 'salmon' },
@@ -89,15 +89,15 @@ joint.shapes.devs.Atomic = joint.shapes.devs.Model.extend({
             '.outPorts .port-body': { fill: 'Tomato' }
         }
 
-    }, joint.shapes.devs.Model.prototype.defaults)
+    }, joint.shapes.flow.Model.prototype.defaults)
 
 });
 
-joint.shapes.devs.Coupled = joint.shapes.devs.Model.extend({
+joint.shapes.flow.Coupled = joint.shapes.flow.Model.extend({
 
     defaults: joint.util.deepSupplement({
 
-        type: 'devs.Coupled',
+        type: 'flow.Coupled',
         size: { width: 200, height: 300 },
         attrs: {
             '.body': { fill: 'seaGreen' },
@@ -106,23 +106,24 @@ joint.shapes.devs.Coupled = joint.shapes.devs.Model.extend({
             '.outPorts .port-body': { fill: 'Tomato' }
         }
 
-    }, joint.shapes.devs.Model.prototype.defaults)
+    }, joint.shapes.flow.Model.prototype.defaults)
 });
 
-joint.shapes.devs.Link = joint.dia.Link.extend({
+joint.shapes.flow.Link = joint.dia.Link.extend({
 
     defaults: {
-        type: 'devs.Link',
-        attrs: { '.connection' : { 'stroke-width' :  2 }}
+        type: 'flow.Link',
+	connector: { name: 'smooth' },
+	attrs: { '.marker-target': { d: 'M 10 0 L 0 5 L 10 10 z' } }
     }
 });
 
-joint.shapes.devs.ModelView = joint.dia.ElementView.extend(joint.shapes.basic.PortsViewInterface);
-joint.shapes.devs.AtomicView = joint.shapes.devs.ModelView;
-joint.shapes.devs.CoupledView = joint.shapes.devs.ModelView;
+joint.shapes.flow.ModelView = joint.dia.ElementView.extend(joint.shapes.basic.PortsViewInterface);
+joint.shapes.flow.AtomicView = joint.shapes.flow.ModelView;
+joint.shapes.flow.CoupledView = joint.shapes.flow.ModelView;
 
 
 if (typeof exports === 'object') {
 
-    module.exports = joint.shapes.devs;
+    module.exports = joint.shapes.flow;
 }
