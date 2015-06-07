@@ -42,7 +42,7 @@ joint.shapes.flow.Model = joint.shapes.basic.Generic.extend(_.extend({}, joint.s
                 stroke: '#000000'
             },
             '.port-body': {
-                r: 10,
+                r: 15,
                 magnet: true,
                 stroke: '#000000'
             },
@@ -50,8 +50,8 @@ joint.shapes.flow.Model = joint.shapes.basic.Generic.extend(_.extend({}, joint.s
                 'pointer-events': 'none'
             },
             '.label': { text: '', 'ref-x': .5, 'ref-y': 0.4, ref: '.body', 'text-anchor': 'middle', fill: '#000000' },
-            '.inPorts .port-label': { x:-15, dy: 4, 'text-anchor': 'end', fill: '#000000' },
-            '.outPorts .port-label':{ x: 15, dy: 4, fill: '#000000' }
+            '.inPorts .port-label': { x: 0, dy: -8, 'text-anchor': 'middle', fill: '#000000' },
+            '.outPorts .port-label':{ x: 0, dy: -8, 'text-anchor': 'middle', fill: '#000000' }
         }
 
     }, joint.shapes.basic.Generic.prototype.defaults),
