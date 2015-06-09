@@ -36,9 +36,8 @@ function fnmodel(fn, id){
 		outPorts: fn.out.map(function(x, n){ return {id: 'o' + n, name: x.name }}),
 		attrs: {
 			'.label': { text: fn.name },
-			rect: { rx: 25, ry: 25 },
-			'.inPorts circle': { fill: 'lime', magnet: 'passive', class: 'input' },
-			'.outPorts circle': { fill: 'lime', class: 'input' },
+			'.inPorts rect': { fill: 'lime', magnet: 'passive' },
+			'.outPorts rect': { fill: 'lime' },
 		}
 	});
 }
@@ -61,13 +60,13 @@ function getPortSelector(node, id) {
 		if (index < 0) throw new Error("getPortSelector(): Port doesn't exist.");
 	}
 
-	return selector + '>g:nth-child(' + (index + 1) + ')>circle';
+	return selector + '>g:nth-child(' + (index + 1) + ')>.port-body';
 }
 
 function makemodel(fns, id){
 	var fn = fns[id];
 	var me = fnmodel(fn, id);
-	me.resize(400, 400);
+	me.set({'.body height': 400, '.body width': 400});
 	me.addTo(graph);
 	for(var i in fn.fns){
 		var sub = fnmodel(fns[fn.fns[i].ref], id + '.' + i);
