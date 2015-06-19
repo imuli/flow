@@ -1,0 +1,25 @@
+<template name="filters">
+<div class="filters">
+	{{#each filters}}
+	{{> filter}}
+	{{/each}}
+</div>
+</template>
+
+<template name="filter">
+<div class="filter">filter definition</div>
+</template>
+
+<template name="newfilter">
+<button class="newfilter">New Filter</button>
+</template>
+
+<template name="editfilter">
+<div class="overlay">
+	<form class="editfilter">
+		<label>Name: <input filter="text" name="name" value="{{name}}"></label>
+		<button class="save">Save</button>
+	</form>
+</div>
+</template>
+
