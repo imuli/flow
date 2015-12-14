@@ -1,0 +1,519 @@
+digraph flow {
+	rankdir = TB;
+	node [shape=none; style=rounded]
+	subgraph cluster_byte_parse_rune {
+		shape = box
+		label = "parse"
+		byte_parse_rune_in [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0"></td></tr>
+					<tr><td port="fn">in</td></tr>
+					<tr><td port="a" bgcolor="seagreen">bytes</td></tr>
+					</table>>
+		]
+		byte_parse_rune_out [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="green">runes</td></tr>
+					<tr><td port="fn">out</td></tr>
+					<tr><td port="a"></td></tr>
+					</table>>
+		]
+		byte_parse_rune_ascii [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td></tr>
+					<tr><td port="fn">ascii</td></tr>
+					<tr><td port="a" bgcolor="green"></td></tr>
+					</table>>
+		]
+		byte_parse_rune_in:a -> byte_parse_rune_ascii:0 [color=seagreen]
+		byte_parse_rune_ascii:a -> byte_parse_rune_out:0 [color=green]
+
+		byte_parse_rune_sixbits0 [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="green"></td></tr>
+					<tr><td colspan="2" port="fn">sixbits</td></tr>
+					<tr><td port="a" bgcolor="seagreen"></td><td port="b" bgcolor="green"></td></tr>
+					</table>>
+		]
+		byte_parse_rune_sixbits0:b -> byte_parse_rune_out:0 [color=green]
+		byte_parse_rune_lead1 [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="blue"></td></tr>
+					<tr><td colspan="2" port="fn">lead</td></tr>
+					<tr><td port="a" bgcolor="seagreen"></td><td port="b" bgcolor="green"></td></tr>
+					</table>>
+		]
+		byte_parse_rune_in:a -> byte_parse_rune_lead1:0 [color=seagreen]
+		byte_parse_rune_lead1:a -> byte_parse_rune_sixbits0:0 [color=seagreen]
+		byte_parse_rune_lead1:b -> byte_parse_rune_sixbits0:1 [color=green]
+		byte_parse_rune_one_0 [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0"></td></tr>
+					<tr><td port="fn">1</td></tr>
+					<tr><td port="a" bgcolor="blue"></td></tr>
+					</table>>
+		]
+		byte_parse_rune_one_0:a -> byte_parse_rune_lead1:1 [color=blue]
+
+		byte_parse_rune_sixbits1 [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="green"></td></tr>
+					<tr><td colspan="2" port="fn">sixbits</td></tr>
+					<tr><td port="a" bgcolor="seagreen"></td><td port="b" bgcolor="green"></td></tr>
+					</table>>
+		]
+		byte_parse_rune_sixbits1:a -> byte_parse_rune_sixbits0:0 [color=seagreen]
+		byte_parse_rune_sixbits1:b -> byte_parse_rune_sixbits0:1 [color=green]
+		byte_parse_rune_lead2 [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="blue"></td></tr>
+					<tr><td colspan="2" port="fn">lead</td></tr>
+					<tr><td port="a" bgcolor="seagreen"></td><td port="b" bgcolor="green"></td></tr>
+					</table>>
+		]
+		byte_parse_rune_in:a -> byte_parse_rune_lead2:0 [color=seagreen]
+		byte_parse_rune_lead2:a -> byte_parse_rune_sixbits1:0 [color=seagreen]
+		byte_parse_rune_lead2:b -> byte_parse_rune_sixbits1:1 [color=green]
+		byte_parse_rune_two_0 [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0"></td></tr>
+					<tr><td port="fn">2</td></tr>
+					<tr><td port="a" bgcolor="blue"></td></tr>
+					</table>>
+		]
+		byte_parse_rune_two_0:a -> byte_parse_rune_lead2:1 [color=blue]
+
+		byte_parse_rune_sixbits2 [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="green"></td></tr>
+					<tr><td colspan="2" port="fn">sixbits</td></tr>
+					<tr><td port="a" bgcolor="seagreen"></td><td port="b" bgcolor="green"></td></tr>
+					</table>>
+		]
+		byte_parse_rune_sixbits2:a -> byte_parse_rune_sixbits1:0 [color=seagreen]
+		byte_parse_rune_sixbits2:b -> byte_parse_rune_sixbits1:1 [color=green]
+		byte_parse_rune_lead3 [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="blue"></td></tr>
+					<tr><td colspan="2" port="fn">lead</td></tr>
+					<tr><td port="a" bgcolor="seagreen"></td><td port="b" bgcolor="green"></td></tr>
+					</table>>
+		]
+		byte_parse_rune_in:a -> byte_parse_rune_lead3:0 [color=seagreen]
+		byte_parse_rune_lead3:a -> byte_parse_rune_sixbits2:0 [color=seagreen]
+		byte_parse_rune_lead3:b -> byte_parse_rune_sixbits2:1 [color=green]
+		byte_parse_rune_three_0 [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0"></td></tr>
+					<tr><td port="fn">3</td></tr>
+					<tr><td port="a" bgcolor="blue"></td></tr>
+					</table>>
+		]
+		byte_parse_rune_three_0:a -> byte_parse_rune_lead3:1 [color=blue]
+
+		byte_parse_rune_sixbits3 [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="green"></td></tr>
+					<tr><td colspan="2" port="fn">sixbits</td></tr>
+					<tr><td port="a" bgcolor="seagreen"></td><td port="b" bgcolor="green"></td></tr>
+					</table>>
+		]
+		byte_parse_rune_sixbits3:a -> byte_parse_rune_sixbits2:0 [color=seagreen]
+		byte_parse_rune_sixbits3:b -> byte_parse_rune_sixbits2:1 [color=green]
+		byte_parse_rune_lead4 [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="blue"></td></tr>
+					<tr><td colspan="2" port="fn">lead</td></tr>
+					<tr><td port="a" bgcolor="seagreen"></td><td port="b" bgcolor="green"></td></tr>
+					</table>>
+		]
+		byte_parse_rune_in:a -> byte_parse_rune_lead4:0 [color=seagreen]
+		byte_parse_rune_lead4:a -> byte_parse_rune_sixbits3:0 [color=seagreen]
+		byte_parse_rune_lead4:b -> byte_parse_rune_sixbits3:1 [color=green]
+		byte_parse_rune_four_0 [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0"></td></tr>
+					<tr><td port="fn">4</td></tr>
+					<tr><td port="a" bgcolor="blue"></td></tr>
+					</table>>
+		]
+		byte_parse_rune_four_0:a -> byte_parse_rune_lead4:1 [color=blue]
+
+		byte_parse_rune_sixbits4 [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="green"></td></tr>
+					<tr><td colspan="2" port="fn">sixbits</td></tr>
+					<tr><td port="a" bgcolor="seagreen"></td><td port="b" bgcolor="green"></td></tr>
+					</table>>
+		]
+		byte_parse_rune_sixbits4:a -> byte_parse_rune_sixbits3:0 [color=seagreen]
+		byte_parse_rune_sixbits4:b -> byte_parse_rune_sixbits3:1 [color=green]
+		byte_parse_rune_lead5 [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="blue"></td></tr>
+					<tr><td colspan="2" port="fn">lead</td></tr>
+					<tr><td port="a" bgcolor="seagreen"></td><td port="b" bgcolor="green"></td></tr>
+					</table>>
+		]
+		byte_parse_rune_in:a -> byte_parse_rune_lead5:0 [color=seagreen]
+		byte_parse_rune_lead5:a -> byte_parse_rune_sixbits4:0 [color=seagreen]
+		byte_parse_rune_lead5:b -> byte_parse_rune_sixbits4:1 [color=green]
+		byte_parse_rune_five_0 [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0"></td></tr>
+					<tr><td port="fn">5</td></tr>
+					<tr><td port="a" bgcolor="blue"></td></tr>
+					</table>>
+		]
+		byte_parse_rune_five_0:a -> byte_parse_rune_lead5:1 [color=blue]
+
+	}
+
+	subgraph cluster_byte_ascii_rune {
+		shape = box
+		label = "ascii"
+		byte_ascii_rune_in [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0"></td></tr>
+					<tr><td port="fn">in</td></tr>
+					<tr><td port="a" bgcolor="seagreen">bytes</td></tr>
+					</table>>
+		]
+
+		byte_ascii_rune_head [
+			label=< <table border="0" cellspacing="0">
+					<tr><td colspan="2" port="0" bgcolor="seagreen"></td></tr>
+					<tr><td colspan="2" port="fn">:</td></tr>
+					<tr><td port="a" bgcolor="seagreen">x₀</td><td port="b" bgcolor="seagreen">xₙ</td></tr>
+					</table>>
+		]
+		byte_ascii_rune_in:a -> byte_ascii_rune_head:0 [color=seagreen]
+
+		byte_ascii_rune_mask [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0"></td></tr>
+					<tr><td port="fn">0x80</td></tr>
+					<tr><td port="a" bgcolor="seagreen"></td></tr>
+					</table>>
+		]
+
+		byte_ascii_rune_testand [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="seagreen"></td></tr>
+					<tr><td colspan="2" port="fn">and</td></tr>
+					<tr><td colspan="2" port="a" bgcolor="green"></td></tr>
+					</table>>
+		]
+		byte_ascii_rune_head:a -> byte_ascii_rune_testand:0 [color="seagreen"]
+		byte_ascii_rune_mask:a -> byte_ascii_rune_testand:1 [color="seagreen"]
+
+		byte_ascii_rune_testnotequal [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="seagreen"></td></tr>
+					<tr><td colspan="2" port="fn">≠</td></tr>
+					<tr><td colspan="2" port="a" bgcolor="cyan"></td></tr>
+					</table>>
+		]
+		byte_ascii_rune_testand:a -> byte_ascii_rune_testnotequal:0 [color="seagreen"]
+		byte_ascii_rune_mask:a -> byte_ascii_rune_testnotequal:1 [color="seagreen"]
+
+		byte_ascii_rune_ifrune [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="green">T</td><td port="1" bgcolor="cyan">?</td><td port="2" bgcolor="green">F</td></tr>
+					<tr><td colspan="3" port="fn">if</td></tr>
+					<tr><td colspan="3" port="a" bgcolor="green"></td></tr>
+					</table>>
+		]
+		byte_ascii_rune_head:a -> byte_ascii_rune_ifrune:0 [color=seagreen]
+		byte_ascii_rune_testnotequal:a -> byte_ascii_rune_ifrune:1 [color=cyan]
+
+		byte_ascii_rune_out [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="1" bgcolor="green">rune</td></tr>
+					<tr><td colspan="2" port="fn">out</td></tr>
+					<tr><td port="a"></td></tr>
+					</table>>
+		]
+		byte_ascii_rune_ifrune:a -> byte_ascii_rune_out:1 [color=green]
+	}
+
+	subgraph cluster_byte_rune_sixbits_byte_rune {
+		shape = box
+		label = "sixbits"
+		byte_rune_sixbits_byte_rune_in [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0"></td></tr>
+					<tr><td colspan="2" port="fn">in</td></tr>
+					<tr><td port="a" bgcolor="seagreen">bytes</td><td port="b" bgcolor="green">rune</td></tr>
+					</table>>
+		]
+		byte_rune_sixbits_byte_rune_out [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen">bytes</td><td port="1" bgcolor="green">rune</td></tr>
+					<tr><td colspan="2" port="fn">out</td></tr>
+					<tr><td port="a"></td></tr>
+					</table>>
+		]
+
+		byte_rune_sixbits_byte_rune_head [
+			label=< <table border="0" cellspacing="0">
+					<tr><td colspan="2" port="0" bgcolor="seagreen"></td></tr>
+					<tr><td colspan="2" port="fn">:</td></tr>
+					<tr><td port="a" bgcolor="seagreen">x₀</td><td port="b" bgcolor="seagreen">xₙ</td></tr>
+					</table>>
+		]
+		byte_rune_sixbits_byte_rune_in:a -> byte_rune_sixbits_byte_rune_head:0 [color=seagreen]
+
+		byte_rune_sixbits_byte_rune_testmask [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0"></td></tr>
+					<tr><td port="fn">0xc0</td></tr>
+					<tr><td port="a" bgcolor="seagreen"></td></tr>
+					</table>>
+		]
+		byte_rune_sixbits_byte_rune_testand [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="seagreen"></td></tr>
+					<tr><td colspan="2" port="fn">and</td></tr>
+					<tr><td colspan="2" port="a" bgcolor="seagreen"></td></tr>
+					</table>>
+		]
+		byte_rune_sixbits_byte_rune_head:a -> byte_rune_sixbits_byte_rune_testand:0 [color=seagreen]
+		byte_rune_sixbits_byte_rune_testmask:a -> byte_rune_sixbits_byte_rune_testand:1 [color=seagreen]
+		byte_rune_sixbits_byte_rune_testvalue [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0"></td></tr>
+					<tr><td port="fn">0x80</td></tr>
+					<tr><td port="a" bgcolor="seagreen"></td></tr>
+					</table>>
+		]
+		byte_rune_sixbits_byte_rune_testequal [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="seagreen"></td></tr>
+					<tr><td colspan="2" port="fn">=</td></tr>
+					<tr><td colspan="2" port="a" bgcolor="cyan"></td></tr>
+					</table>>
+		]
+		byte_rune_sixbits_byte_rune_testand:a -> byte_rune_sixbits_byte_rune_testequal:0 [color=seagreen]
+		byte_rune_sixbits_byte_rune_testvalue:a -> byte_rune_sixbits_byte_rune_testequal:1 [color=seagreen]
+
+		byte_rune_sixbits_byte_rune_sixmask [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0"></td></tr>
+					<tr><td port="fn">0x3f</td></tr>
+					<tr><td port="a" bgcolor="seagreen"></td></tr>
+					</table>>
+		]
+		byte_rune_sixbits_byte_rune_sixand [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="seagreen"></td></tr>
+					<tr><td colspan="2" port="fn">and</td></tr>
+					<tr><td colspan="2" port="a" bgcolor="seagreen"></td></tr>
+					</table>>
+		]
+		byte_rune_sixbits_byte_rune_head:a -> byte_rune_sixbits_byte_rune_sixand:0 [color=seagreen]
+		byte_rune_sixbits_byte_rune_sixmask:a -> byte_rune_sixbits_byte_rune_sixand:1 [color=seagreen]
+		byte_rune_sixbits_byte_rune_six [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0"></td></tr>
+					<tr><td port="fn">6</td></tr>
+					<tr><td port="a" bgcolor="blue"></td></tr>
+					</table>>
+		]
+		byte_rune_sixbits_byte_rune_sixshift [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="green"></td><td port="1" bgcolor="blue"></td></tr>
+					<tr><td colspan="2" port="fn">«</td></tr>
+					<tr><td colspan="2" port="a" bgcolor="green"></td></tr>
+					</table>>
+		]
+		byte_rune_sixbits_byte_rune_in:b -> byte_rune_sixbits_byte_rune_sixshift:0 [color=green]
+		byte_rune_sixbits_byte_rune_six:a -> byte_rune_sixbits_byte_rune_sixshift:1 [color=blue]
+		byte_rune_sixbits_byte_rune_sixor [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="green"></td><td port="1" bgcolor="seagreen"></td></tr>
+					<tr><td colspan="2" port="or">or</td></tr>
+					<tr><td colspan="2" port="a" bgcolor="green"></td></tr>
+					</table>>
+		]
+		byte_rune_sixbits_byte_rune_sixshift:a -> byte_rune_sixbits_byte_rune_sixor:0 [color=seagreen]
+		byte_rune_sixbits_byte_rune_sixand:a -> byte_rune_sixbits_byte_rune_sixor:1 [color=seagreen]
+		byte_rune_sixbits_byte_rune_sixor:a -> byte_rune_sixbits_byte_rune_ifrune:0 [color=green]
+
+		byte_rune_sixbits_byte_rune_badrune [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0"></td></tr>
+					<tr><td port="fn">bad rune</td></tr>
+					<tr><td port="a" bgcolor="green"></td></tr>
+					</table>>
+		]
+		byte_rune_sixbits_byte_rune_ifrune [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="green">T</td><td port="1" bgcolor="cyan">?</td><td port="2" bgcolor="green">F</td></tr>
+					<tr><td colspan="3" port="fn">if</td></tr>
+					<tr><td colspan="3" port="a" bgcolor="green"></td></tr>
+					</table>>
+		]
+		byte_rune_sixbits_byte_rune_badrune:a -> byte_rune_sixbits_byte_rune_ifrune:2 [color=green]
+		byte_rune_sixbits_byte_rune_testequal:a -> byte_rune_sixbits_byte_rune_ifrune:1 [color=cyan]
+		byte_rune_sixbits_byte_rune_ifrune:a -> byte_rune_sixbits_byte_rune_out:1 [color=green]
+
+		byte_rune_sixbits_byte_rune_ifbyte [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen">T</td><td port="1" bgcolor="cyan">?</td><td port="2" bgcolor="seagreen">F</td></tr>
+					<tr><td colspan="3" port="fn">if</td></tr>
+					<tr><td colspan="3" port="a" bgcolor="seagreen"></td></tr>
+					</table>>
+		]
+		byte_rune_sixbits_byte_rune_head:b -> byte_rune_sixbits_byte_rune_ifbyte:0 [color=seagreen]
+		byte_rune_sixbits_byte_rune_testequal:a -> byte_rune_sixbits_byte_rune_ifbyte:1 [color=cyan]
+		byte_rune_sixbits_byte_rune_in:a -> byte_rune_sixbits_byte_rune_ifbyte:2 [color=seagreen]
+		byte_rune_sixbits_byte_rune_ifbyte:a -> byte_rune_sixbits_byte_rune_out:0 [color=seagreen]
+	}
+
+	subgraph cluster_byte_num_lead_byte_rune {
+		shape = box
+		label = "lead"
+		byte_num_lead_byte_rune_in [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0"></td></tr>
+					<tr><td colspan="2" port="fn">in</td></tr>
+					<tr><td port="a" bgcolor="seagreen">bytes</td><td port="b" bgcolor="blue">following</td></tr>
+					</table>>
+		]
+
+		byte_num_lead_byte_rune_head [
+			label=< <table border="0" cellspacing="0">
+					<tr><td colspan="2" port="0" bgcolor="seagreen"></td></tr>
+					<tr><td colspan="2" port="fn">:</td></tr>
+					<tr><td port="a" bgcolor="seagreen">x₀</td><td port="b" bgcolor="seagreen">xₙ</td></tr>
+					</table>>
+		]
+		byte_num_lead_byte_rune_in:a -> byte_num_lead_byte_rune_head:0 [color=seagreen]
+
+		byte_num_lead_byte_rune_mask [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0"></td></tr>
+					<tr><td port="fn">0xce</td></tr>
+					<tr><td port="a" bgcolor="seagreen"></td></tr>
+					</table>>
+		]
+
+		byte_num_lead_byte_rune_maskshift [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="blue"></td></tr>
+					<tr><td colspan="2" port="fn">»</td></tr>
+					<tr><td colspan="2" port="a" bgcolor="seagreen"></td></tr>
+					</table>>
+		]
+		byte_num_lead_byte_rune_mask:a -> byte_num_lead_byte_rune_maskshift:0 [color="seagreen"]
+		byte_num_lead_byte_rune_in:b -> byte_num_lead_byte_rune_maskshift:1 [color="blue"]
+
+		byte_num_lead_byte_rune_maskand [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="seagreen"></td></tr>
+					<tr><td colspan="2" port="fn">and</td></tr>
+					<tr><td colspan="2" port="a" bgcolor="green"></td></tr>
+					</table>>
+		]
+		byte_num_lead_byte_rune_maskshift:a -> byte_num_lead_byte_rune_maskand:0 [color="seagreen"]
+		byte_num_lead_byte_rune_head:a -> byte_num_lead_byte_rune_maskand:1 [color="blue"]
+
+		byte_num_lead_byte_rune_five [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="1"></td></tr>
+					<tr><td port="fn">5</td></tr>
+					<tr><td port="a" bgcolor="blue"></td></tr>
+					</table>>
+		]
+
+		byte_num_lead_byte_rune_testminus [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="blue">a</td><td port="1" bgcolor="blue">b</td></tr>
+					<tr><td colspan="2" port="fn">-</td></tr>
+					<tr><td colspan="2" port="a" bgcolor="blue">a-b</td></tr>
+					</table>>
+		]
+		byte_num_lead_byte_rune_five:a -> byte_num_lead_byte_rune_testminus:0 [color="blue"]
+		byte_num_lead_byte_rune_in:b -> byte_num_lead_byte_rune_testminus:1 [color="blue"]
+
+		byte_num_lead_byte_rune_testshift [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="blue"></td></tr>
+					<tr><td colspan="2" port="fn">«</td></tr>
+					<tr><td colspan="2" port="a" bgcolor="seagreen"></td></tr>
+					</table>>
+		]
+		byte_num_lead_byte_rune_mask:a -> byte_num_lead_byte_rune_testshift:0 [color="seagreen"]
+		byte_num_lead_byte_rune_testminus:a -> byte_num_lead_byte_rune_testshift:1 [color="blue"]
+
+		byte_num_lead_byte_rune_one [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="1"></td></tr>
+					<tr><td port="fn">1</td></tr>
+					<tr><td port="a" bgcolor="blue"></td></tr>
+					</table>>
+		]
+
+		byte_num_lead_byte_rune_testvalue [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="blue"></td></tr>
+					<tr><td colspan="2" port="fn">«</td></tr>
+					<tr><td colspan="2" port="a" bgcolor="seagreen"></td></tr>
+					</table>>
+		]
+		byte_num_lead_byte_rune_testshift:a -> byte_num_lead_byte_rune_testvalue:0 [color="seagreen"]
+		byte_num_lead_byte_rune_one:a -> byte_num_lead_byte_rune_testvalue:1 [color="blue"]
+
+		byte_num_lead_byte_rune_testand [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="seagreen"></td></tr>
+					<tr><td colspan="2" port="fn">and</td></tr>
+					<tr><td colspan="2" port="a" bgcolor="seagreen"></td></tr>
+					</table>>
+		]
+		byte_num_lead_byte_rune_head:a -> byte_num_lead_byte_rune_testand:0 [color="seagreen"]
+		byte_num_lead_byte_rune_testshift:a -> byte_num_lead_byte_rune_testand:1 [color="seagreen"]
+
+		byte_num_lead_byte_rune_testequal [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen"></td><td port="1" bgcolor="seagreen"></td></tr>
+					<tr><td colspan="2" port="fn">=</td></tr>
+					<tr><td colspan="2" port="a" bgcolor="cyan"></td></tr>
+					</table>>
+		]
+		byte_num_lead_byte_rune_testand:a -> byte_num_lead_byte_rune_testequal:0 [color="seagreen"]
+		byte_num_lead_byte_rune_testvalue:a -> byte_num_lead_byte_rune_testequal:1 [color="seagreen"]
+
+		byte_num_lead_byte_rune_ifrune [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="green">T</td><td port="1" bgcolor="cyan">?</td><td port="2" bgcolor="green">F</td></tr>
+					<tr><td colspan="3" port="fn">if</td></tr>
+					<tr><td colspan="3" port="a" bgcolor="green"></td></tr>
+					</table>>
+		]
+		byte_num_lead_byte_rune_maskand:a -> byte_num_lead_byte_rune_ifrune:0 [color=green]
+		byte_num_lead_byte_rune_testequal:a -> byte_num_lead_byte_rune_ifrune:1 [color=cyan]
+		byte_num_lead_byte_rune_ifrune:a -> byte_num_lead_byte_rune_out:1 [color=green]
+
+		byte_num_lead_byte_rune_ifbyte [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen">T</td><td port="1" bgcolor="cyan">?</td><td port="2" bgcolor="seagreen">F</td></tr>
+					<tr><td colspan="3" port="fn">if</td></tr>
+					<tr><td colspan="3" port="a" bgcolor="seagreen"></td></tr>
+					</table>>
+		]
+		byte_num_lead_byte_rune_head:b -> byte_num_lead_byte_rune_ifbyte:0 [color=seagreen]
+		byte_num_lead_byte_rune_testequal:a -> byte_num_lead_byte_rune_ifbyte:1 [color=cyan]
+		byte_num_lead_byte_rune_ifbyte:a -> byte_num_lead_byte_rune_out:0 [color=seagreen]
+
+		byte_num_lead_byte_rune_out [
+			label=< <table border="0" cellspacing="0">
+					<tr><td port="0" bgcolor="seagreen">bytes</td><td port="1" bgcolor="green">rune</td></tr>
+					<tr><td colspan="2" port="fn">out</td></tr>
+					<tr><td port="a"></td></tr>
+					</table>>
+		]
+	}
+
+}
