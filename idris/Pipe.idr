@@ -1,87 +1,80 @@
 module Pipe
+import Data.Fin
 %default total
 
 data Pipe : (input : Type) -> (output : Type) -> (upstream : Type) -> (result : Type) -> Type where
-  Push : (next : Lazy $ Pipe i o u r) -> (out : o) -> Pipe i o u r
-  Pull : (more : (i -> Lazy $ Pipe i o u r)) -> (final : (u -> Lazy $ Pipe i o u r)) -> Pipe i o u r
+  Push : (next : Pipe i o u r) -> (out : o) -> Pipe i o u r
+  Pull : (more : (i -> Pipe i o u r)) -> (final : (u -> Pipe i o u r)) -> Pipe i o u r
   Pure : (result : r) -> Pipe i o u r
-  Fuse : (up : Lazy $ Pipe a b x y) -> (down : Lazy $ Pipe b c y z) -> Pipe a c x z
-
-LPipe : (input : Type) -> (output : Type) -> (upstream : Type) -> (result : Type) -> Type
-LPipe i o u r = Lazy $ Pipe i o u r
-
-LPush : (next : Lazy $ Pipe i o u r) -> (out : o) -> Lazy $ Pipe i o u r
-LPush next out = Delay $ Push next out
-LPull : (more : (i -> Lazy $ Pipe i o u r)) -> (final : (u -> Lazy $ Pipe i o u r)) -> Lazy $ Pipe i o u r
-LPull more final = Delay $ Pull more final
-LPure : (result : r) -> Lazy $ Pipe i o u r
-LPure result = Delay $ Pure result
-LFuse : (up : Lazy $ Pipe a b x y) -> (down : Lazy $ Pipe b c y z) -> LPipe a c x z
-LFuse up down = Delay $ Fuse up down
 
 Source : Type -> Type -> Type
-Source o u = LPipe () o u ()
+Source o u = Pipe () o u ()
 
 Filter : Type -> Type -> Type
-Filter i o = LPipe i o () ()
+Filter i o = Pipe i o () ()
 
 Sink : Type -> Type -> Type
-Sink i r   = LPipe i () () r
+Sink i r   = Pipe i () () r
 
-%name LPipe up,down,up',down'
-
-partial
-idP : LPipe i i r r
-idP = LPull (LPush idP) LPure
+%name Pipe up,down,up',down'
 
 partial
-fuseDown : LPipe a b x y -> LPipe b c y z -> LPipe a c x z
+id : Pipe i i r r
+id = Pull (Push id) Pure
+
 partial
-fuseUp : (b -> LPipe b c y z) -> (y -> LPipe b c y z) -> LPipe a b x y -> LPipe a c x z
-fuseDown up (Delay $ Push next out)   = LPush (fuseDown up next) out
-fuseDown up (Delay $ Pull more final) = fuseUp more final up
-fuseDown up (Delay $ Pure result)     = LPure result
-fuseUp more final (Delay $ Push next out)     = fuseDown next (more out)
-fuseUp more final (Delay $ Pull more' final') = LPull (fuseUp more final . more') (fuseUp more final . final')
-fuseUp more final (Delay $ Pure result)       = fuseDown (LPure result) (final result)
+fuseDown : Pipe a b x y -> Pipe b c y z -> Pipe a c x z
+partial
+fuseUp : (b -> Pipe b c y z) -> (y -> Pipe b c y z) -> Pipe a b x y -> Pipe a c x z
+fuseDown up (Push next out)   = Push (fuseDown up next) out
+fuseDown up (Pull more final) = fuseUp more final up
+fuseDown up (Pure result)     = Pure result
+fuseUp more final (Push next out)     = fuseDown next (more out)
+fuseUp more final (Pull more' final') = Pull (fuseUp more final . more') (fuseUp more final . final')
+fuseUp more final (Pure result)       = fuseDown (Pure result) (final result)
 
 infixr 10 >|
 partial
-(>|) : (up : LPipe a b x y) -> (down : LPipe b c y z) -> LPipe a c x z
-(>|) = LFuse
+(>|) : (up : Pipe a b x y) -> (down : Pipe b c y z) -> Pipe a c x z
+(>|) = fuseDown
+
+sourceCount : (n : Integer) -> (m : Integer) -> Source Integer ()
+sourceCount n m = Push (case compare n m of
+                       LT => assert_total $ sourceCount (n+1) m
+                       EQ => Pure ()
+                       GT => assert_total $ sourceCount (n-1) m) n
 
 sourceList : (source : List o) -> Source o ()
-sourceList []        = LPure ()
-sourceList (x :: xs) = LPush (sourceList xs) x
+sourceList []        = Pure ()
+sourceList (x :: xs) = Push (sourceList xs) x
 
 sinkVect : (n : Nat) -> Sink i (List i)
 sinkVect n = go id n where
   go : (is: List i -> List i) -> (n: Nat) -> Sink i (List i)
-  go is Z     = LPure $ is []
-  go is (S k) = LPull (\i => go (is . (i::)) k) (\_ => LPure $ is [])
+  go is Z     = Pure $ is []
+  go is (S k) = Pull (\i => go (is . (i::)) k) (\_ => Pure $ is [])
 
 partial
 sinkList : Sink i (List i)
 sinkList = go id where
   partial go : (is: List i -> List i) -> Sink i (List i)
-  go is = LPull (\i => go (is . (i::))) (\_ => LPure $ is [])
+  go is = Pull (\i => go (is . (i::))) (\_ => Pure $ is [])
 
 consume : (n : Nat) -> Filter i i
-consume Z     = LPure ()
-consume (S k) = LPull (LPush (consume k)) LPure
-
--- partial
--- map : (i -> o) -> Filter i o
--- map f = LPull (\i => LPush (Delay (Force $ Pipe.map f)) (Force $ f i)) LPure
+consume Z     = Pure ()
+consume (S k) = Pull (Push (consume k)) Pure
 
 partial
-foldSink : (r -> i -> r) -> r -> Sink i r
-foldSink f a = LPull (\i => foldSink f (f a i)) (\_ => LPure a)
+map : (i -> o) -> Filter i o
+map f = Pull (\i => Push (map f) $ f i) Pure
 
 partial
-run : (pipe : LPipe i o () r) -> r
-run (Delay $ Push next out) = run next
-run (Delay $ Pull more final) = run (final ())
-run (Delay $ Pure result) = result
-run (Delay $ Fuse up down) = run $ fuseDown up down
+sinkFold : (r -> i -> r) -> r -> Sink i r
+sinkFold f a = Pull (\i => sinkFold f (f a i)) (\_ => Pure a)
+
+partial
+run : (pipe : Pipe i o () r) -> r
+run (Push next out) = run next
+run (Pull more final) = run (final ())
+run (Pure result) = result
 
