@@ -5,6 +5,7 @@ data Pipe : (input : Type) -> (output : Type) -> (upstream : Type) -> (result : 
   Push : (next : Lazy $ Pipe i o u r) -> (out : o) -> Pipe i o u r
   Pull : (more : (i -> Lazy $ Pipe i o u r)) -> (final : (u -> Lazy $ Pipe i o u r)) -> Pipe i o u r
   Pure : (result : r) -> Pipe i o u r
+  Fuse : (up : Lazy $ Pipe a b x y) -> (down : Lazy $ Pipe b c y z) -> Pipe a c x z
 
 LPipe : (input : Type) -> (output : Type) -> (upstream : Type) -> (result : Type) -> Type
 LPipe i o u r = Lazy $ Pipe i o u r
@@ -15,6 +16,8 @@ LPull : (more : (i -> Lazy $ Pipe i o u r)) -> (final : (u -> Lazy $ Pipe i o u 
 LPull more final = Delay $ Pull more final
 LPure : (result : r) -> Lazy $ Pipe i o u r
 LPure result = Delay $ Pure result
+LFuse : (up : Lazy $ Pipe a b x y) -> (down : Lazy $ Pipe b c y z) -> LPipe a c x z
+LFuse up down = Delay $ Fuse up down
 
 Source : Type -> Type -> Type
 Source o u = LPipe () o u ()
@@ -45,7 +48,7 @@ fuseUp more final (Delay $ Pure result)       = fuseDown (LPure result) (final r
 infixr 10 >|
 partial
 (>|) : (up : LPipe a b x y) -> (down : LPipe b c y z) -> LPipe a c x z
-(>|) = fuseDown
+(>|) = LFuse
 
 sourceList : (source : List o) -> Source o ()
 sourceList []        = LPure ()
@@ -75,8 +78,10 @@ partial
 foldSink : (r -> i -> r) -> r -> Sink i r
 foldSink f a = LPull (\i => foldSink f (f a i)) (\_ => LPure a)
 
+partial
 run : (pipe : LPipe i o () r) -> r
 run (Delay $ Push next out) = run next
 run (Delay $ Pull more final) = run (final ())
 run (Delay $ Pure result) = result
+run (Delay $ Fuse up down) = run $ fuseDown up down
 
