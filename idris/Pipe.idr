@@ -2,71 +2,81 @@ module Pipe
 %default total
 
 data Pipe : (input : Type) -> (output : Type) -> (upstream : Type) -> (result : Type) -> Type where
-  Push : (next : Pipe i o u r) -> (out : o) -> Pipe i o u r
-  Pull : (more : (i -> Pipe i o u r)) -> (final : (u -> Pipe i o u r)) -> Pipe i o u r
+  Push : (next : Lazy $ Pipe i o u r) -> (out : o) -> Pipe i o u r
+  Pull : (more : (i -> Lazy $ Pipe i o u r)) -> (final : (u -> Lazy $ Pipe i o u r)) -> Pipe i o u r
   Pure : (result : r) -> Pipe i o u r
 
+LPipe : (input : Type) -> (output : Type) -> (upstream : Type) -> (result : Type) -> Type
+LPipe i o u r = Lazy $ Pipe i o u r
+
+LPush : (next : Lazy $ Pipe i o u r) -> (out : o) -> Lazy $ Pipe i o u r
+LPush next out = Delay $ Push next out
+LPull : (more : (i -> Lazy $ Pipe i o u r)) -> (final : (u -> Lazy $ Pipe i o u r)) -> Lazy $ Pipe i o u r
+LPull more final = Delay $ Pull more final
+LPure : (result : r) -> Lazy $ Pipe i o u r
+LPure result = Delay $ Pure result
+
 Source : Type -> Type -> Type
-Source o u = Pipe () o u ()
+Source o u = LPipe () o u ()
 
 Filter : Type -> Type -> Type
-Filter i o = Pipe i o () ()
+Filter i o = LPipe i o () ()
 
 Sink : Type -> Type -> Type
-Sink i r   = Pipe i () () r
+Sink i r   = LPipe i () () r
 
-%name Pipe up,down,up',down'
-
-partial
-id : Pipe i i r r
-id = Pull (Push id) Pure
+%name LPipe up,down,up',down'
 
 partial
-fuseDown : Pipe a b x y -> Pipe b c y z -> Pipe a c x z
+idP : LPipe i i r r
+idP = LPull (LPush idP) LPure
+
 partial
-fuseUp : (b -> Pipe b c y z) -> (y -> Pipe b c y z) -> Pipe a b x y -> Pipe a c x z
-fuseDown up (Push next out)   = Push (fuseDown up next) out
-fuseDown up (Pull more final) = fuseUp more final up
-fuseDown up (Pure result)     = Pure result
-fuseUp more final (Push next out)     = fuseDown next (more out)
-fuseUp more final (Pull more' final') = Pull (fuseUp more final . more') (fuseUp more final . final')
-fuseUp more final (Pure result)       = fuseDown (Pure result) (final result)
+fuseDown : LPipe a b x y -> LPipe b c y z -> LPipe a c x z
+partial
+fuseUp : (b -> LPipe b c y z) -> (y -> LPipe b c y z) -> LPipe a b x y -> LPipe a c x z
+fuseDown up (Delay $ Push next out)   = LPush (fuseDown up next) out
+fuseDown up (Delay $ Pull more final) = fuseUp more final up
+fuseDown up (Delay $ Pure result)     = LPure result
+fuseUp more final (Delay $ Push next out)     = fuseDown next (more out)
+fuseUp more final (Delay $ Pull more' final') = LPull (fuseUp more final . more') (fuseUp more final . final')
+fuseUp more final (Delay $ Pure result)       = fuseDown (LPure result) (final result)
 
 infixr 10 >|
 partial
-(>|) : (up : Pipe a b x y) -> (down : Pipe b c y z) -> Pipe a c x z
+(>|) : (up : LPipe a b x y) -> (down : LPipe b c y z) -> LPipe a c x z
 (>|) = fuseDown
 
 sourceList : (source : List o) -> Source o ()
-sourceList []        = Pure ()
-sourceList (x :: xs) = Push (sourceList xs) x
+sourceList []        = LPure ()
+sourceList (x :: xs) = LPush (sourceList xs) x
 
 sinkVect : (n : Nat) -> Sink i (List i)
 sinkVect n = go id n where
   go : (is: List i -> List i) -> (n: Nat) -> Sink i (List i)
-  go is Z     = Pure $ is []
-  go is (S k) = Pull (\i => go (is . (i::)) k) (\_ => Pure $ is [])
+  go is Z     = LPure $ is []
+  go is (S k) = LPull (\i => go (is . (i::)) k) (\_ => LPure $ is [])
 
 partial
 sinkList : Sink i (List i)
 sinkList = go id where
   partial go : (is: List i -> List i) -> Sink i (List i)
-  go is = Pull (\i => go (is . (i::))) (\_ => Pure $ is [])
+  go is = LPull (\i => go (is . (i::))) (\_ => LPure $ is [])
 
 consume : (n : Nat) -> Filter i i
-consume Z     = Pure ()
-consume (S k) = Pull (Push (consume k)) Pure
+consume Z     = LPure ()
+consume (S k) = LPull (LPush (consume k)) LPure
 
-partial
-map : (i -> o) -> Filter i o
-map f = Pull (\i => Push (map f) $ f i) Pure
+-- partial
+-- map : (i -> o) -> Filter i o
+-- map f = LPull (\i => LPush (Delay (Force $ Pipe.map f)) (Force $ f i)) LPure
 
 partial
 foldSink : (r -> i -> r) -> r -> Sink i r
-foldSink f a = Pull (\i => foldSink f (f a i)) (\_ => Pure a)
+foldSink f a = LPull (\i => foldSink f (f a i)) (\_ => LPure a)
 
-run : (pipe : Pipe i o () r) -> r
-run (Push next out) = run next
-run (Pull more final) = run (final ())
-run (Pure result) = result
+run : (pipe : LPipe i o () r) -> r
+run (Delay $ Push next out) = run next
+run (Delay $ Pull more final) = run (final ())
+run (Delay $ Pure result) = result
 
