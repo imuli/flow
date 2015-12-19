@@ -17,6 +17,6 @@ main : IO ()
 main = do [prog, count] <- getArgs | []                    => usage ""   "I have no name!"
                                    | [prog]                => usage prog "Too few arguments."
                                    | (prog :: count :: xs) => usage prog "Too many arguments."
-          case parsePositive count of
+          case parsePositive {a=Nat} count of
                Just cnt => run $ sourceM getLine >| consume cnt >| sink putStrLn
                Nothing  => usage prog $ count ++ " is not a natural number."
