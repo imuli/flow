@@ -1,22 +1,26 @@
 module Pipe
-import Data.Fin
 %default total
 
+public
 data Pipe : (input : Type) -> (output : Type) -> (monad : Type -> Type) -> (upstream : Type) -> (result : Type) -> Type where
   Push : (fin : m _) -> (next : Pipe i o m u r) -> (out : o) -> Pipe i o m u r
   Pull : (done : (u -> Pipe i o m u r)) -> (more : (i -> Pipe i o m u r)) -> Pipe i o m u r
   Pure : (result : r) -> Pipe i o m u r
   ActM : (act : m (Pipe i o m u r)) -> Pipe i o m u r
 
+public
 Source : Type -> (Type -> Type) -> Type -> Type
 Source o m u = Pipe () o m u ()
 
+public
 Filter : Type -> Type -> (Type -> Type) -> Type
 Filter i o m = Pipe i o m () ()
 
+public
 Sink : Type -> (Type -> Type) -> Type -> Type
 Sink i m r   = Pipe i () m () r
 
+public
 noop : Monad m => m ()
 noop = return ()
 
@@ -46,6 +50,7 @@ mutual
          ActM act          => ActM $ do return $ fuseUp final last down !act
 
 infixr 10 >|
+public
 partial
 (>|) : Monad m => (up : Pipe a b m x y) -> (down : Pipe b c m y z) -> Pipe a c m x z
 (>|) = fuseDown noop
@@ -55,13 +60,19 @@ sourceList []        = Pure ()
 sourceList (x :: xs) = Push noop (sourceList xs) x
 
 -- FIXME how to catch exceptions here?
+public
 partial
-sourceM : Monad m => (m o) -> Source o m ()
-sourceM f = ActM $ do return $ Push noop (sourceM f) !(f)
+sourceM : Monad m => {default noop cleanup : m ()} -> (m o) -> Source o m ()
+sourceM {cleanup} f = ActM $ do return $ Push cleanup (sourceM f) !(f)
 
 partial
-sinkM : Monad m => (i -> m r) -> r -> Sink i m r
-sinkM f x = Pull (\_ => Pure x) (\i => ActM $ do return $ sinkM f !(f i))
+sinkM : Monad m => (cleanup : m r) -> (i -> m r) -> Sink i m r
+sinkM cleanup f = Pull (\_ => ActM $ do return $ Pure !cleanup) (\i => ActM $ do f i; return $ sinkM cleanup f)
+
+public
+partial
+sink : Monad m => {default noop cleanup : m ()} -> (i -> m ()) -> Sink i m ()
+sink {cleanup} f = Pull (\_ => ActM $ do return $ Pure !cleanup) (\i => ActM $ do f i; return $ sink f)
 
 sinkVect : Monad m => (n : Nat) -> Sink i m (List i)
 sinkVect n = go id n where
@@ -75,10 +86,12 @@ sinkList = go id where
   partial go : (is: List i -> List i) -> Sink i m (List i)
   go is = Pull (\_ => Pure $ is []) (\i => go (is . (i::)))
 
+public
 consume : Monad m => (n : Nat) -> Filter i i m
 consume Z     = Pure ()
 consume (S k) = Pull Pure (Push noop (consume k))
 
+public
 partial
 map : Monad m => (i -> o) -> Filter i o m
 map f = Pull Pure (\i => Push noop (map f) (f i))
@@ -87,9 +100,11 @@ partial
 sinkFold : (r -> i -> r) -> r -> Sink i m r
 sinkFold f a = Pull (\_ => Pure a) (\i => sinkFold f (f a i))
 
+public
 partial
-run : Monad m => (pipe : Pipe i o m () r) -> r
+run : Monad m => (pipe : Pipe i o m () r) -> m r
 run (Push fin next out) = run next
 run (Pull final more)   = run (final ())
-run (Pure result)       = result
+run (Pure result)       = return result
+run (ActM act)          = run !act
 
