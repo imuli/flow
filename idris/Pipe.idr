@@ -93,6 +93,12 @@ consume (S k) = Pull Pure (Push noop (consume k))
 
 public
 partial
+drop : Monad m => (n : Nat) -> Filter i i m
+drop Z     = id
+drop (S k) = Pull Pure $ (\_ => drop k)
+
+public
+partial
 map : Monad m => (i -> o) -> Filter i o m
 map f = Pull Pure (\i => Push noop (map f) (f i))
 
