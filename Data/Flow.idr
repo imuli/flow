@@ -62,9 +62,24 @@ sourceList (x :: xs) = Push noop (sourceList xs) x
 public
 partial
 sourceM : Monad m => {default noop cleanup : m ()} -> (m o) -> Source o m ()
-sourceM {cleanup} f = ActM $ do return $ Push cleanup (sourceM f) !(f)
+sourceM {cleanup} f = ActM $ do return $ Push cleanup (sourceM {cleanup=cleanup} f) !(f)
+
+public
+partial
+sourceE : Monad m => {default noop cleanup : m ()} -> (m (Either e o)) -> Source o m ()
+sourceE {cleanup} f = ActM $ do return $ case !(f) of 
+                                              Left _  => Pure ()
+                                              Right d => Push cleanup (sourceE {cleanup=cleanup} f) d
 
 -- sinks
+
+public
+partial
+sinkE : Monad m => {default noop cleanup : m ()} -> (i -> m (Either e _)) -> Sink i m ()
+sinkE {cleanup} f = Pull (\_ => ActM $ do return $ Pure !cleanup)
+                         (\i => ActM $ do return $ case !(f i) of
+                                                        Left _  => Pure ()
+                                                        Right _ => sinkE {cleanup=cleanup} f)
 
 public
 partial
@@ -74,7 +89,7 @@ sinkM cleanup f = Pull (\_ => ActM $ do return $ Pure !cleanup) (\i => ActM $ do
 public
 partial
 sink : Monad m => {default noop cleanup : m ()} -> (i -> m ()) -> Sink i m ()
-sink {cleanup} f = Pull (\_ => ActM $ do return $ Pure !cleanup) (\i => ActM $ do f i; return $ sink f)
+sink {cleanup} f = Pull (\_ => ActM $ do return $ Pure !cleanup) (\i => ActM $ do f i; return $ sink {cleanup=cleanup} f)
 
 public
 sinkVect : Monad m => (n : Nat) -> Sink i m (List i)
