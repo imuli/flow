@@ -119,6 +119,23 @@ partial
 map : Monad m => (i -> o) -> Filter i o m
 map f = Pull Pure (\i => Push noop (map f) (f i))
 
+public
+partial
+condense : Monad m => (acc : a) -> (final : a -> o) -> (norm : i -> a -> Either a a) -> Filter i o m
+condense acc final norm = condense' acc where
+  condense' this = Pull (\u => Push noop (Pure u) (final this))
+                        (\i => case norm i this of
+                                    Left next => condense' next
+                                    Right out => Push noop (condense' acc) (final out))
+
+public
+partial
+split : Monad m => {default Nil pref : List i} -> (pred : (i -> Bool)) -> Filter i (List i) m
+split {pref} pred = condense pref reverse split' where
+  split' : i -> List i -> Either (List i) (List i)
+  split' i is = if pred i then Right is
+                          else Left (i :: is)
+
 -- put them all together
 
 public
