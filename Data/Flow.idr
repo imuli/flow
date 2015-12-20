@@ -26,10 +26,6 @@ noop = return ()
 
 %name Flow up,down,up',down'
 
-partial
-id : Monad m => Flow i i m r r
-id = Pull Pure (Push noop id)
-
 mutual
   partial
   fuseDown : Monad m => (final : m _) -> (up : Flow a b m x y) -> (down : Flow b c m y z) -> Flow a c m x z
@@ -55,6 +51,9 @@ partial
 (>|) : Monad m => (up : Flow a b m x y) -> (down : Flow b c m y z) -> Flow a c m x z
 (>|) = fuseDown noop
 
+-- sources {{
+
+public
 sourceList : Monad m => (source : List o) -> Source o m ()
 sourceList []        = Pure ()
 sourceList (x :: xs) = Push noop (sourceList xs) x
@@ -65,6 +64,9 @@ partial
 sourceM : Monad m => {default noop cleanup : m ()} -> (m o) -> Source o m ()
 sourceM {cleanup} f = ActM $ do return $ Push cleanup (sourceM f) !(f)
 
+-- sinks
+
+public
 partial
 sinkM : Monad m => (cleanup : m r) -> (i -> m r) -> Sink i m r
 sinkM cleanup f = Pull (\_ => ActM $ do return $ Pure !cleanup) (\i => ActM $ do f i; return $ sinkM cleanup f)
@@ -74,17 +76,32 @@ partial
 sink : Monad m => {default noop cleanup : m ()} -> (i -> m ()) -> Sink i m ()
 sink {cleanup} f = Pull (\_ => ActM $ do return $ Pure !cleanup) (\i => ActM $ do f i; return $ sink f)
 
+public
 sinkVect : Monad m => (n : Nat) -> Sink i m (List i)
 sinkVect n = go id n where
   go : Monad m => (is: List i -> List i) -> (n: Nat) -> Sink i m (List i)
   go is Z     = Pure $ is []
   go is (S k) = Pull (\_ => Pure $ is []) (\i => go (is . (i::)) k)
 
+public
 partial
 sinkList : Monad m => Sink i m (List i)
 sinkList = go id where
   partial go : (is: List i -> List i) -> Sink i m (List i)
   go is = Pull (\_ => Pure $ is []) (\i => go (is . (i::)))
+
+public
+partial
+sinkFold : (r -> i -> r) -> r -> Sink i m r
+sinkFold f a = Pull (\_ => Pure a) (\i => sinkFold f (f a i))
+
+-- filters
+-- filters that are partial don't terminate the chain
+
+public
+partial
+id : Monad m => Filter i i m
+id = Pull Pure (Push noop id)
 
 public
 consume : Monad m => (n : Nat) -> Filter i i m
@@ -102,9 +119,7 @@ partial
 map : Monad m => (i -> o) -> Filter i o m
 map f = Pull Pure (\i => Push noop (map f) (f i))
 
-partial
-sinkFold : (r -> i -> r) -> r -> Sink i m r
-sinkFold f a = Pull (\_ => Pure a) (\i => sinkFold f (f a i))
+-- put them all together
 
 public
 partial
