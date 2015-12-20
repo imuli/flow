@@ -1,38 +1,38 @@
-module Pipe
+module Flow
 %default total
 
 public
-data Pipe : (input : Type) -> (output : Type) -> (monad : Type -> Type) -> (upstream : Type) -> (result : Type) -> Type where
-  Push : (fin : m _) -> (next : Pipe i o m u r) -> (out : o) -> Pipe i o m u r
-  Pull : (done : (u -> Pipe i o m u r)) -> (more : (i -> Pipe i o m u r)) -> Pipe i o m u r
-  Pure : (result : r) -> Pipe i o m u r
-  ActM : (act : m (Pipe i o m u r)) -> Pipe i o m u r
+data Flow : (input : Type) -> (output : Type) -> (monad : Type -> Type) -> (upstream : Type) -> (result : Type) -> Type where
+  Push : (fin : m _) -> (next : Flow i o m u r) -> (out : o) -> Flow i o m u r
+  Pull : (done : (u -> Flow i o m u r)) -> (more : (i -> Flow i o m u r)) -> Flow i o m u r
+  Pure : (result : r) -> Flow i o m u r
+  ActM : (act : m (Flow i o m u r)) -> Flow i o m u r
 
 public
 Source : Type -> (Type -> Type) -> Type -> Type
-Source o m u = Pipe () o m u ()
+Source o m u = Flow () o m u ()
 
 public
 Filter : Type -> Type -> (Type -> Type) -> Type
-Filter i o m = Pipe i o m () ()
+Filter i o m = Flow i o m () ()
 
 public
 Sink : Type -> (Type -> Type) -> Type -> Type
-Sink i m r   = Pipe i () m () r
+Sink i m r   = Flow i () m () r
 
 public
 noop : Monad m => m ()
 noop = return ()
 
-%name Pipe up,down,up',down'
+%name Flow up,down,up',down'
 
 partial
-id : Monad m => Pipe i i m r r
+id : Monad m => Flow i i m r r
 id = Pull Pure (Push noop id)
 
 mutual
   partial
-  fuseDown : Monad m => (final : m _) -> (up : Pipe a b m x y) -> (down : Pipe b c m y z) -> Pipe a c m x z
+  fuseDown : Monad m => (final : m _) -> (up : Flow a b m x y) -> (down : Flow b c m y z) -> Flow a c m x z
   fuseDown final up down =
     case down of
          Push fin next out => Push (do fin; final) (fuseDown final up next) out
@@ -41,7 +41,7 @@ mutual
          ActM act          => ActM $ do return $ fuseDown final up !act
 
   partial
-  fuseUp : Monad m => (final : (y -> Pipe b c m y z)) -> (last : m _) -> (down : (b -> Pipe b c m y z)) -> (up : Pipe a b m x y) -> Pipe a c m x z
+  fuseUp : Monad m => (final : (y -> Flow b c m y z)) -> (last : m _) -> (down : (b -> Flow b c m y z)) -> (up : Flow a b m x y) -> Flow a c m x z
   fuseUp final last down up =
     case up of
          Push fin next out => fuseDown fin next (down out)
@@ -52,7 +52,7 @@ mutual
 infixr 10 >|
 public
 partial
-(>|) : Monad m => (up : Pipe a b m x y) -> (down : Pipe b c m y z) -> Pipe a c m x z
+(>|) : Monad m => (up : Flow a b m x y) -> (down : Flow b c m y z) -> Flow a c m x z
 (>|) = fuseDown noop
 
 sourceList : Monad m => (source : List o) -> Source o m ()
@@ -108,7 +108,7 @@ sinkFold f a = Pull (\_ => Pure a) (\i => sinkFold f (f a i))
 
 public
 partial
-run : Monad m => (pipe : Pipe i o m () r) -> m r
+run : Monad m => (pipe : Flow i o m () r) -> m r
 run (Push fin next out) = run next
 run (Pull final more)   = run (final ())
 run (Pure result)       = return result

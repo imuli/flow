@@ -1,5 +1,5 @@
 module Main
-import Pipe
+import Data.Flow
 import Data.String
 
 errStr : (message : String) -> IO ()
