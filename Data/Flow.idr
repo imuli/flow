@@ -51,6 +51,29 @@ partial
 (>|) : Monad m => (up : Flow a b m x y) -> (down : Flow b c m y z) -> Flow a c m x z
 (>|) = fuseDown noop
 
+mutual
+  partial
+  joinRight : Monad m => (left : Source (a -> b) m u) -> (right : Source a m u) -> Source b m u
+  joinRight left right = case right of
+                              (Push fin next out) => joinLeft fin left next out
+                              (Pull done more)    => Pure () -- This doesn't happen
+                              (Pure result)       => Pure result
+                              (ActM act)          => ActM $ do return $ joinRight left !act
+
+  partial
+  joinLeft : Monad m => (rfin : m _) -> (left : Source (a -> b) m u) -> (right : Source a m u) -> a -> Source b m u
+  joinLeft rfin left right val = case left of
+                              (Push fin next out) => Push (do rfin; return fin) (joinRight next right) (out val)
+                              (Pull done more)    => Pure () -- This doesn't happen
+                              (Pure result)       => Pure result
+                              (ActM act)          => ActM $ do return $ joinLeft rfin !act right val
+
+infixr 11 >|<
+public
+partial
+(>|<) : Monad m => (left : Source (a -> b) m u) -> (right : Source a m u) -> Source b m u
+(>|<) = joinRight
+
 -- sources {{
 
 public
