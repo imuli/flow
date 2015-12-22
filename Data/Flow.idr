@@ -45,7 +45,7 @@ mutual
          Pure result       => fuseDown noop (Pure result) (final result)
          ActM act          => ActM $ do return $ fuseUp final last down !act
 
-infixr 10 >|
+infixr 0 >|
 public
 partial
 (>|) : Monad m => (up : Flow a b m x y) -> (down : Flow b c m y z) -> Flow a c m x z
@@ -68,7 +68,7 @@ mutual
                               (Pure result)       => Pure result
                               (ActM act)          => ActM $ do return $ joinLeft rfin !act right val
 
-infixr 11 >|<
+infixr 1 >|<
 public
 partial
 (>|<) : Monad m => (left : Source (a -> b) m u) -> (right : Source a m u) -> Source b m u
@@ -178,7 +178,7 @@ split {pref} pred = condense pref reverse split' where
 
 public
 partial
-run : Monad m => (pipe : Flow i o m () r) -> m r
+run : Monad m => (pipe : Sink _ m r) -> m r
 run (Push fin next out) = run next
 run (Pull final more)   = run (final ())
 run (Pure result)       = return result
