@@ -13,8 +13,19 @@ usage : String -> String -> IO ()
 usage prog err = do errLine err
                     errLine $ "Usage: " ++ prog ++ " (count)"
 
+linesIn : Source String IO ()
+linesIn = sourceE linesIn' where
+  linesIn' : IO (Either FileError String)
+  linesIn' = do s <- getLine
+                return $ case !(fEOF stdin) of
+                              False => Right s
+                              True => Left FileReadError
+
+linesOut : Sink String IO ()
+linesOut = sinkE $ fPutStrLn stdout
+
 go : Nat -> Nat -> IO ()
-go skip count = run $ sourceM getLine >| drop skip >| consume count >| sink putStrLn
+go skip count = run $ linesIn >| drop skip >| consume count >| linesOut
 
 try : (prog : String) -> (skip : String) -> (end : String) -> IO ()
 try prog skip end = case (parsePositive {a=Nat} skip, parsePositive {a=Nat} end) of
