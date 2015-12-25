@@ -1,0 +1,30 @@
+digraph flow {
+subgraph cluster_factorial {
+	node [shape=none; width=0; height=0]
+	factorial_plus [label = <<table border="0">
+								<tr>
+									<td colspan="1" bgcolor="blue" port="i0">a</td>
+									<td colspan="1" bgcolor="blue" port="i1">b</td>
+								</tr>
+								<tr><td colspan="2" port="f">+</td></tr>
+								<tr>
+									<td colspan="2" bgcolor="blue" port="o0">a+b</td>
+								</tr>
+							</table>>]
+	factorial_0r [label = <<table border="0">
+								<tr><td bgcolor="blue" colspan="1" port="i0">1</td></tr>
+								<tr><td bgcolor="blue" colspan="1" port="f">0</td></tr>
+							</table>>]
+	factorial_1l [label = <<table border="0">
+								<tr><td bgcolor="blue" colspan="1" port="f">1</td></tr>
+							</table>>]
+	factorial_out [label = <<table border="0">
+								<tr><td bgcolor="blue" colspan="1" port="f">out</td></tr>
+							</table>>]
+	factorial_1l:f -> factorial_plus:i0
+	factorial_0r:f -> factorial_plus:i1
+	factorial_plus:o0 -> factorial_0r:i0 [constraint=false]
+	factorial_plus:o0 -> factorial_out:f
+	factorial_plus:o0 -> factorial_1l:f [constraint=false]
+}
+}
