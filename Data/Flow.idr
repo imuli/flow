@@ -1,28 +1,28 @@
 module Flow
 %default total
 
-public
+export
 data Flow : (input : Type) -> (output : Type) -> (monad : Type -> Type) -> (upstream : Type) -> (result : Type) -> Type where
   Push : (fin : m _) -> (next : Flow i o m u r) -> (out : o) -> Flow i o m u r
   Pull : (done : (u -> Flow i o m u r)) -> (more : (i -> Flow i o m u r)) -> Flow i o m u r
   Pure : (result : r) -> Flow i o m u r
   ActM : (act : m (Flow i o m u r)) -> Flow i o m u r
 
-public
+export
 Source : Type -> (Type -> Type) -> Type -> Type
 Source o m u = Flow () o m u ()
 
-public
+export
 Filter : Type -> Type -> (Type -> Type) -> Type
 Filter i o m = Flow i o m () ()
 
-public
+export
 Sink : Type -> (Type -> Type) -> Type -> Type
 Sink i m r   = Flow i () m () r
 
-public
+export
 noop : Monad m => m ()
-noop = return ()
+noop = pure ()
 
 %name Flow up,down,up',down'
 
@@ -33,8 +33,8 @@ mutual
     case down of
          Push fin next out => Push (do fin; final) (fuseDown final up next) out
          Pull done more    => fuseUp done final more up
-         Pure result       => ActM (do final; return $ Pure result)
-         ActM act          => ActM $ do return $ fuseDown final up !act
+         Pure result       => ActM (do final; pure $ Pure result)
+         ActM act          => ActM $ do pure $ fuseDown final up !act
 
   partial
   fuseUp : Monad m => (final : (y -> Flow b c m y z)) -> (last : m _) -> (down : (b -> Flow b c m y z)) -> (up : Flow a b m x y) -> Flow a c m x z
@@ -43,10 +43,10 @@ mutual
          Push fin next out => fuseDown fin next (down out)
          Pull done more    => Pull (fuseUp final last down . done) (fuseUp final last down . more)
          Pure result       => fuseDown noop (Pure result) (final result)
-         ActM act          => ActM $ do return $ fuseUp final last down !act
+         ActM act          => ActM $ do pure $ fuseUp final last down !act
 
 infixr 0 >|
-public
+export
 partial
 (>|) : Monad m => (up : Flow a b m x y) -> (down : Flow b c m y z) -> Flow a c m x z
 (>|) = fuseDown noop
@@ -58,77 +58,77 @@ mutual
                               (Push fin next out) => joinLeft fin left next out
                               (Pull done more)    => Pure () -- This doesn't happen
                               (Pure result)       => Pure result
-                              (ActM act)          => ActM $ do return $ joinRight left !act
+                              (ActM act)          => ActM $ do pure $ joinRight left !act
 
   partial
   joinLeft : Monad m => (rfin : m _) -> (left : Source (a -> b) m u) -> (right : Source a m u) -> a -> Source b m u
   joinLeft rfin left right val = case left of
-                              (Push fin next out) => Push (do rfin; return fin) (joinRight next right) (out val)
+                              (Push fin next out) => Push (do rfin; pure fin) (joinRight next right) (out val)
                               (Pull done more)    => Pure () -- This doesn't happen
                               (Pure result)       => Pure result
-                              (ActM act)          => ActM $ do return $ joinLeft rfin !act right val
+                              (ActM act)          => ActM $ do pure $ joinLeft rfin !act right val
 
 infixr 1 >|<
-public
+export
 partial
 (>|<) : Monad m => (left : Source (a -> b) m u) -> (right : Source a m u) -> Source b m u
 (>|<) = joinRight
 
 -- sources {{
 
-public
+export
 sourceList : Monad m => (source : List o) -> Source o m ()
 sourceList []        = Pure ()
 sourceList (x :: xs) = Push noop (sourceList xs) x
 
 -- FIXME how to catch exceptions here?
-public
+export
 partial
 sourceM : Monad m => {default noop cleanup : m ()} -> (m o) -> Source o m ()
-sourceM {cleanup} f = ActM $ do return $ Push cleanup (sourceM {cleanup=cleanup} f) !(f)
+sourceM {cleanup} f = ActM $ do pure $ Push cleanup (sourceM {cleanup=cleanup} f) !(f)
 
-public
+export
 partial
 sourceE : Monad m => {default noop cleanup : m ()} -> (m (Either e o)) -> Source o m ()
-sourceE {cleanup} f = ActM $ do return $ case !(f) of 
+sourceE {cleanup} f = ActM $ do pure $ case !(f) of 
                                               Left _  => Pure ()
                                               Right d => Push cleanup (sourceE {cleanup=cleanup} f) d
 
 -- sinks
 
-public
+export
 partial
 sinkE : Monad m => {default noop cleanup : m ()} -> (i -> m (Either e _)) -> Sink i m ()
-sinkE {cleanup} f = Pull (\_ => ActM $ do return $ Pure !cleanup)
-                         (\i => ActM $ do return $ case !(f i) of
+sinkE {cleanup} f = Pull (\_ => ActM $ do pure $ Pure !cleanup)
+                         (\i => ActM $ do pure $ case !(f i) of
                                                         Left _  => Pure ()
                                                         Right _ => sinkE {cleanup=cleanup} f)
 
-public
+export
 partial
 sinkM : Monad m => (cleanup : m r) -> (i -> m r) -> Sink i m r
-sinkM cleanup f = Pull (\_ => ActM $ do return $ Pure !cleanup) (\i => ActM $ do f i; return $ sinkM cleanup f)
+sinkM cleanup f = Pull (\_ => ActM $ do pure $ Pure !cleanup) (\i => ActM $ do f i; pure $ sinkM cleanup f)
 
-public
+export
 partial
 sink : Monad m => {default noop cleanup : m ()} -> (i -> m ()) -> Sink i m ()
-sink {cleanup} f = Pull (\_ => ActM $ do return $ Pure !cleanup) (\i => ActM $ do f i; return $ sink {cleanup=cleanup} f)
+sink {cleanup} f = Pull (\_ => ActM $ do pure $ Pure !cleanup) (\i => ActM $ do f i; pure $ sink {cleanup=cleanup} f)
 
-public
+export
 sinkVect : Monad m => (n : Nat) -> Sink i m (List i)
 sinkVect n = go id n where
   go : Monad m => (is: List i -> List i) -> (n: Nat) -> Sink i m (List i)
   go is Z     = Pure $ is []
   go is (S k) = Pull (\_ => Pure $ is []) (\i => go (is . (i::)) k)
 
-public
+export
 partial
 sinkList : Monad m => Sink i m (List i)
 sinkList = go id where
   partial go : (is: List i -> List i) -> Sink i m (List i)
   go is = Pull (\_ => Pure $ is []) (\i => go (is . (i::)))
 
-public
+export
 partial
 sinkFold : (r -> i -> r) -> r -> Sink i m r
 sinkFold f a = Pull (\_ => Pure a) (\i => sinkFold f (f a i))
@@ -136,28 +136,28 @@ sinkFold f a = Pull (\_ => Pure a) (\i => sinkFold f (f a i))
 -- filters
 -- filters that are partial don't terminate the chain
 
-public
+export
 partial
 id : Monad m => Filter i i m
 id = Pull Pure (Push noop id)
 
-public
+export
 consume : Monad m => (n : Nat) -> Filter i i m
 consume Z     = Pure ()
 consume (S k) = Pull Pure (Push noop (consume k))
 
-public
+export
 partial
 drop : Monad m => (n : Nat) -> Filter i i m
 drop Z     = id
 drop (S k) = Pull Pure $ (\_ => drop k)
 
-public
+export
 partial
 map : Monad m => (i -> o) -> Filter i o m
 map f = Pull Pure (\i => Push noop (map f) (f i))
 
-public
+export
 partial
 condense : Monad m => (acc : a) -> (final : a -> o) -> (norm : i -> a -> Either a a) -> Filter i o m
 condense acc final norm = condense' acc where
@@ -166,7 +166,7 @@ condense acc final norm = condense' acc where
                                     Left next => condense' next
                                     Right out => Push noop (condense' acc) (final out))
 
-public
+export
 partial
 split : Monad m => {default Nil pref : List i} -> (pred : (i -> Bool)) -> Filter i (List i) m
 split {pref} pred = condense pref reverse split' where
@@ -176,11 +176,11 @@ split {pref} pred = condense pref reverse split' where
 
 -- put them all together
 
-public
+export
 partial
 run : Monad m => (pipe : Sink _ m r) -> m r
 run (Push fin next out) = run next
 run (Pull final more)   = run (final ())
-run (Pure result)       = return result
+run (Pure result)       = pure result
 run (ActM act)          = run !act
 
